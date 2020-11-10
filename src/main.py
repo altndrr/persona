@@ -11,10 +11,11 @@ Options:
 """
 
 from docopt import docopt
-from . import __version__
+from src import __version__
 
 
 def main():
+    """Main function of the module."""
     options = docopt(__doc__, version=__version__)
 
     # Dynamically match the user command with a function.
