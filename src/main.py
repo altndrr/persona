@@ -11,6 +11,7 @@ Options:
 """
 
 from docopt import docopt
+
 from src import __version__
 
 

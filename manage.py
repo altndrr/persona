@@ -28,24 +28,28 @@ def main():
 
 def code(options):
     """The code command."""
-    if options['lint']:
-        os.system('pylint src')
-    elif options['test']:
-        os.system('pytest --cov=src --cov-report term-missing \
-                   -n auto --timeout=5 src')
+    if options["lint"]:
+        os.system("pylint src")
+    elif options["test"]:
+        os.system(
+            "pytest --cov=src --cov-report term-missing \
+                   -n auto --timeout=5 src"
+        )
 
 
 def env(options):
     """The env command."""
-    if options['export']:
-        print('Exporting conda packages to `environment.yml`...')
+    if options["export"]:
+        print("Exporting conda packages to `environment.yml`...")
 
         # Get the name of the search utility given the os.
-        utility = 'findstr' if os.name == 'nt' else 'grep'
+        utility = "findstr" if os.name == "nt" else "grep"
 
-        os.system(f'conda env export --from-history --no-builds | \
-                    {utility} -v "prefix" > environment.yml')
+        os.system(
+            f'conda env export --from-history --no-builds | \
+                    {utility} -v "prefix" > environment.yml'
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
