@@ -2,7 +2,7 @@
 manage
 
 Usage:
-    manage code (lint | test)
+    manage code (format | lint | test)
     manage env export
     manage -h | --help
 
@@ -28,7 +28,9 @@ def main():
 
 def code(options):
     """The code command."""
-    if options["lint"]:
+    if options["format"]:
+        os.system("black src && isort src")
+    elif options["lint"]:
         os.system("pylint src")
     elif options["test"]:
         os.system(
