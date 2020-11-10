@@ -2,7 +2,7 @@
 manage
 
 Usage:
-    manage code lint
+    manage code (lint | test)
     manage env export
     manage -h | --help
 
@@ -30,6 +30,8 @@ def code(options):
     """The code command."""
     if options['lint']:
         os.system('pylint src')
+    elif options['test']:
+        os.system('pytest --cov-report term-missing --cov=src src')
 
 
 def env(options):
