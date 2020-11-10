@@ -10,3 +10,5 @@ dependencies:
   - seaborn
   - docopt
   - pylint
+  - pytest
+  - pytest-cov
