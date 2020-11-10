@@ -12,3 +12,5 @@ dependencies:
   - pylint
   - pytest
   - pytest-cov
+  - pytest-timeout
+  - pytest-xdist

@@ -31,7 +31,8 @@ def code(options):
     if options['lint']:
         os.system('pylint src')
     elif options['test']:
-        os.system('pytest --cov-report term-missing --cov=src src')
+        os.system('pytest --cov=src --cov-report term-missing \
+                   -n auto --timeout=5 src')
 
 
 def env(options):
