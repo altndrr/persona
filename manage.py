@@ -2,6 +2,7 @@
 manage
 
 Usage:
+    manage code lint
     manage env export
     manage -h | --help
 
@@ -23,6 +24,12 @@ def main():
         if key in globals() and value:
             command = globals()[key]
             command(options)
+
+
+def code(options):
+    """The code command."""
+    if options['lint']:
+        os.system('pylint src')
 
 
 def env(options):
