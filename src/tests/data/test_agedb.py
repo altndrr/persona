@@ -62,3 +62,27 @@ def test_get_image(options, error, output):
         assert agedb.get_image(**options) == output
     else:
         assert agedb.get_image(**options)
+
+
+test_images = [
+    ({}, None, 5),
+    ({"image_ids": [-1]}, ValueError, 1),
+    ({"image_ids": [True]}, ValueError, 1),
+    ({"image_ids": ["-1"]}, ValueError, 1),
+    ({"image_ids": [0, 1, 2]}, None, 3),
+    ({"class_id": -1}, ValueError, 1),
+    ({"class_id": True}, ValueError, 1),
+    ({"class_id": "MariaCallas"}, None, 24),
+    ({"n_images": -1}, ValueError, 1),
+]
+
+
+@pytest.mark.skipif(not agedb.IS_AVAILABLE, reason="requires the agedb dataset")
+@pytest.mark.parametrize("options, error, output_len", test_images)
+def test_get_images(options, error, output_len):
+    """Test the get_images function"""
+    if error:
+        with pytest.raises(error):
+            agedb.get_images(**options)
+    else:
+        assert len(agedb.get_images(**options)) == output_len

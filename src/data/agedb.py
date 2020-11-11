@@ -104,3 +104,35 @@ def get_image(image_id: int = None, class_id: str = None) -> str:
         image = IMAGES[randint(0, len(IMAGES) - 1)]
 
     return image
+
+
+def get_images(image_ids: list = None, class_id: str = None, n_images: int = 5) -> list:
+    """
+    Get a list of paths to images of the dataset. If neither the list of image ids nor
+    of class of images is passed, a list of n random image is returned.
+
+    :param image_ids: list of unique identifiers of images
+    :param class_id: unique identifier of a class of images
+    :param n_images: number of random images to retrieve
+    :return: list of path to images
+    """
+    if image_ids:
+        images = [get_image(image_id=image_id) for image_id in image_ids]
+    elif class_id:
+        images = [
+            image
+            for i, image in enumerate(IMAGES)
+            if ANNOTATIONS[i]["class_id"] == class_id
+        ]
+
+        if len(images) == 0:
+            raise ValueError(f"`{class_id}` is an invalid class identifier")
+    else:
+        if n_images >= len(IMAGES) or n_images < 1:
+            raise ValueError(
+                f"`{n_images}` is an invalid number for the number of images to retrieve"
+            )
+
+        images = [get_image() for _ in range(n_images)]
+
+    return images
