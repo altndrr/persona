@@ -16,7 +16,7 @@ from src import __version__
 
 
 def main():
-    """Main function of the module."""
+    """Main function of the module"""
     options = docopt(__doc__, version=__version__)
 
     # Dynamically match the user command with a function.

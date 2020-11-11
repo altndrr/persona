@@ -16,7 +16,7 @@ from docopt import docopt
 
 
 def main():
-    """Project manager."""
+    """Main function of the manage script"""
     options = docopt(__doc__)
 
     # Dynamically match the user command with a function.
@@ -27,7 +27,7 @@ def main():
 
 
 def code(options):
-    """The code command."""
+    """Code management command"""
     if options["format"]:
         os.system("black src && isort src")
     elif options["lint"]:
@@ -40,7 +40,7 @@ def code(options):
 
 
 def env(options):
-    """The env command."""
+    """Env management command"""
     if options["export"]:
         print("Exporting conda packages to `environment.yml`...")
 
