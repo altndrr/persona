@@ -36,3 +36,29 @@ def test_get_annotations(options, error, output):
         assert agedb.get_image_annotations(**options) == output
     else:
         assert agedb.get_image_annotations(**options)
+
+
+test_image = [
+    ({}, None, None),
+    ({"image_id": -1}, ValueError, None),
+    ({"image_id": "-1"}, ValueError, None),
+    ({"image_id": True}, ValueError, None),
+    ({"image_id": 0}, None, None),
+    ({"class_id": -1}, ValueError, None),
+    ({"class_id": "-1"}, ValueError, None),
+    ({"class_id": True}, ValueError, None),
+    ({"class_id": "MariaCallas"}, None, None),
+]
+
+
+@pytest.mark.skipif(not agedb.IS_AVAILABLE, reason="requires the agedb dataset")
+@pytest.mark.parametrize("options, error, output", test_image)
+def test_get_image(options, error, output):
+    """Test the get_image function"""
+    if error:
+        with pytest.raises(error):
+            agedb.get_image(**options)
+    elif output:
+        assert agedb.get_image(**options) == output
+    else:
+        assert agedb.get_image(**options)

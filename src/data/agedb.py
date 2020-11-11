@@ -2,6 +2,7 @@
 
 import os
 from glob import glob
+from random import randint
 
 ROOT_PATH = os.path.join("data", "raw", "agedb")
 
@@ -63,3 +64,43 @@ def get_image_annotations(image_id: int = None, image_path: str = None) -> dict:
         raise TypeError("either `image_id` or `image_path` must be passed")
 
     return annotations
+
+
+def get_image(image_id: int = None, class_id: str = None) -> str:
+    """
+    Get the path to an image of the dataset. If neither the id of the image nor the id
+    of a class of images is passed, a random image is returned.
+
+    :param image_id: unique identifier of an image
+    :param class_id: unique identifier of a class of images
+    :return: path to the image
+    :raises ValueError:
+    """
+
+    if image_id is not None:
+        image_id = str(image_id)
+        image = [
+            image
+            for i, image in enumerate(IMAGES)
+            if ANNOTATIONS[i]["image_id"] == image_id
+        ]
+
+        if len(image) != 1:
+            raise ValueError(f"`{image_id}` is an invalid image identifier")
+
+        image = image[0]
+    elif class_id is not None:
+        class_images = [
+            image
+            for i, image in enumerate(IMAGES)
+            if ANNOTATIONS[i]["class_id"] == class_id
+        ]
+
+        if len(class_images) == 0:
+            raise ValueError(f"`{class_id}` is an invalid class identifier")
+
+        image = class_images[randint(0, len(class_images) - 1)]
+    else:
+        image = IMAGES[randint(0, len(IMAGES) - 1)]
+
+    return image
