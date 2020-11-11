@@ -34,8 +34,8 @@ def get_image_annotations(image_id: int = None, image_path: str = None) -> dict:
     """
     Given the path to an image, returns a dictionary containing its annotations
 
-    :param image_path: unique identifier of the image
-    :param image_id: path to the image
+    :param image_id: unique identifier of the image
+    :param image_path: path to the image
     :return: image annotations
     :raises ValueError:
     """
@@ -129,9 +129,7 @@ def get_images(image_ids: list = None, class_id: str = None, n_images: int = 5) 
             raise ValueError(f"`{class_id}` is an invalid class identifier")
     else:
         if n_images >= len(IMAGES) or n_images < 1:
-            raise ValueError(
-                f"`{n_images}` is an invalid number for the number of images to retrieve"
-            )
+            raise ValueError(f"`{n_images}` is an invalid number of images to retrieve")
 
         images = [get_image() for _ in range(n_images)]
 
