@@ -27,3 +27,39 @@ def _get_image_annotations(image_path: str) -> dict:
 
 IMAGES = glob(os.path.join(ROOT_PATH, "*.jpg"))
 ANNOTATIONS = [_get_image_annotations(image) for image in IMAGES]
+
+
+def get_image_annotations(image_id: int = None, image_path: str = None) -> dict:
+    """
+    Given the path to an image, returns a dictionary containing its annotations
+
+    :param image_path: unique identifier of the image
+    :param image_id: path to the image
+    :return: image annotations
+    :raises ValueError:
+    """
+
+    if image_id is not None:
+        image_id = str(image_id)
+        annotations = [
+            annotation
+            for annotation in ANNOTATIONS
+            if annotation["image_id"] == image_id
+        ]
+
+        if len(annotations) != 1:
+            raise ValueError(f"`{image_id}` is an invalid image identifier")
+
+        annotations = annotations[0]
+    elif image_path is not None:
+        if image_path not in IMAGES:
+            raise ValueError(
+                f"`{image_path} does not refer to an image of the dataset`"
+            )
+
+        index = IMAGES.index(image_path)
+        annotations = ANNOTATIONS[index]
+    else:
+        raise TypeError("either `image_id` or `image_path` must be passed")
+
+    return annotations
