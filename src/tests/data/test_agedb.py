@@ -1,8 +1,10 @@
 """Test the data.agedb module"""
 
+import os
+
 import pytest
 
-import src.data.agedb as agedb
+from src.data.agedb import AgeDB
 
 test_annotations = [
     ({}, TypeError, None),
@@ -18,17 +20,19 @@ test_annotations = [
     ({"image_path": "/"}, ValueError, None),
     ({"image_path": "wrong_naming.jpg"}, ValueError, None),
     (
-        {"image_path": agedb.get_image(image_id=0)},
+        {"image_path": os.path.join(AgeDB.ROOT_PATH, "0_MariaCallas_35_f.jpg")},
         None,
         {"age": "35", "class_id": "MariaCallas", "gender": "f", "image_id": "0"},
     ),
 ]
 
 
-@pytest.mark.skipif(not agedb.IS_AVAILABLE, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
 @pytest.mark.parametrize("options, error, output", test_annotations)
 def test_get_annotations(options, error, output):
     """Test the get_annotation function"""
+    agedb = AgeDB()
+
     if error:
         with pytest.raises(error):
             agedb.get_image_annotations(**options)
@@ -51,10 +55,12 @@ test_image = [
 ]
 
 
-@pytest.mark.skipif(not agedb.IS_AVAILABLE, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
 @pytest.mark.parametrize("options, error, output", test_image)
 def test_get_image(options, error, output):
     """Test the get_image function"""
+    agedb = AgeDB()
+
     if error:
         with pytest.raises(error):
             agedb.get_image(**options)
@@ -77,10 +83,12 @@ test_images = [
 ]
 
 
-@pytest.mark.skipif(not agedb.IS_AVAILABLE, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
 @pytest.mark.parametrize("options, error, output_len", test_images)
 def test_get_images(options, error, output_len):
     """Test the get_images function"""
+    agedb = AgeDB()
+
     if error:
         with pytest.raises(error):
             agedb.get_images(**options)
