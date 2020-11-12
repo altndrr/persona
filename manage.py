@@ -35,7 +35,7 @@ def code(options):
     elif options["test"]:
         os.system(
             "pytest --cov=src --cov-report term-missing \
-                   -n auto --timeout=5 src"
+                   -n auto --timeout=60 src"
         )
 
 
