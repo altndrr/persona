@@ -119,6 +119,7 @@ class AgeDB:
         :param class_id: unique identifier of a class of images
         :param n_images: number of random images to retrieve
         :return: list of path to images
+        :raises ValueError:
         """
         if indexes:
             images = [self.get_image(index=index) for index in indexes]
