@@ -1,6 +1,7 @@
 """Collection of classes and functions for the VGGFace2 dataset"""
 
 import os
+from random import randint
 
 
 class VGGFace2:
@@ -48,7 +49,8 @@ class VGGFace2:
             all_values = []
             annotations = []
             for image_path in self._images:
-                class_id, filename = os.path.split(image_path)
+                path, filename = os.path.split(image_path)
+                path, class_id = os.path.split(path)
                 filename, _ = os.path.splitext(filename)
                 image_id, face_id = filename.split("_")
                 values = [class_id, image_id, face_id]
@@ -75,28 +77,95 @@ class VGGFace2:
 
         return images
 
-    def get_image(self, index: int) -> str:
+    def get_image_annotations(self, index: int = None, image_path: str = None) -> dict:
         """
-        Get an image path given its index
+        Get the annotations of an image
 
         :param index: index of the image
-        :return: path to the image
-        :raises IndexError:
+        :param image_path: path to the image
+        :return: image annotations
+        :raises IndexError, TypeError, ValueError:
         """
-        if index <= len(self._images) - 1:
-            return self._images[index]
+        if index is not None:
+            if index <= len(self._annotations) - 1:
+                annotations = self._annotations[index]
+            else:
+                raise IndexError(f"`{index} is not a valid index`")
+        elif image_path is not None:
+            if image_path not in self._images:
+                raise ValueError(
+                    f"`{image_path} does not refer to an image of the dataset`"
+                )
 
-        raise IndexError(f"`{index} is not a valid index`")
+            index = self._images.index(image_path)
+            annotations = self._annotations[index]
+        else:
+            raise TypeError("either `index` or `image_path` must be passed")
 
-    def get_image_annotations(self, index: int) -> dict:
+        return annotations
+
+    def get_image(self, index: int = None, class_id: str = None) -> str:
         """
-        Get the annotations of an image given its index
+        Get the path to an image. If neither the id of the image nor the id of a class of images
+        is passed, a random image is returned.
 
         :param index: index of the image
+        :param class_id: unique identifier of a class of images
         :return: path to the image
-        :raises IndexError:
+        :raises IndexError, ValueError:
         """
-        if index <= len(self._annotations) - 1:
-            return self._annotations[index]
 
-        raise IndexError(f"`{index} is not a valid index`")
+        if index is not None:
+            if index <= len(self._images) - 1:
+                image = self._images[index]
+            else:
+                raise IndexError(f"`{index} is not a valid index`")
+        elif class_id is not None:
+            class_images = [
+                image
+                for i, image in enumerate(self._images)
+                if self._annotations[i]["class_id"] == class_id
+            ]
+
+            if len(class_images) == 0:
+                raise ValueError(f"`{class_id}` is an invalid class identifier")
+
+            image = class_images[randint(0, len(class_images) - 1)]
+        else:
+            image = self._images[randint(0, len(self._images) - 1)]
+
+        return image
+
+    def get_images(
+        self, indexes: list = None, class_id: str = None, n_images: int = 5
+    ) -> list:
+        """
+        Get a list of paths to images. If neither the list of image ids nor a class of images is
+        passed, a list of n random image is returned.
+
+        :param indexes: list of indexes to images
+        :param class_id: unique identifier of a class of images
+        :param n_images: number of random images to retrieve
+        :return: list of path to images
+        :raises ValueError:
+        """
+        if indexes:
+            images = [self.get_image(index=index) for index in indexes]
+        elif class_id:
+            images = [
+                image
+                for i, image in enumerate(self._images)
+                if self._annotations[i]["class_id"] == class_id
+            ]
+
+            if len(images) == 0:
+                raise ValueError(f"`{class_id}` is an invalid class identifier")
+        else:
+            if n_images >= len(self._images) or n_images < 1:
+                raise ValueError(
+                    f"`{n_images}` is an invalid number of images to retrieve"
+                )
+
+            images = [self.get_image() for _ in range(n_images)]
+
+        return images
