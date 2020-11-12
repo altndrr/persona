@@ -41,7 +41,9 @@ class VGGFace2(Raw):
 
         :return: image annotations
         """
-        if self.is_available:
+        annotations = []
+
+        if len(self._images) > 0:
             annotation_name = f"{self._split}_annotations.txt"
             annotation_path = os.path.join(self.get_root_path(), annotation_name)
 
