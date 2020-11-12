@@ -10,15 +10,19 @@ class AgeDB(Raw):
     """AgeDB main class"""
 
     @classmethod
-    def _get_root_path(cls) -> str:
+    def get_root_path(cls) -> str:
         return os.path.join("data", "raw", "agedb")
 
     @classmethod
-    def _get_annotation_keys(cls) -> list:
+    def get_annotations_keys(cls) -> list:
         return ["image_id", "class_id", "age", "gender"]
 
-    def _get_path(self) -> str:
-        return self._get_root_path()
+    @classmethod
+    def is_available(cls) -> bool:
+        return os.path.exists(cls.get_root_path())
+
+    def get_path(self) -> str:
+        return self.get_root_path()
 
     def _load_annotations(self) -> list:
         """
@@ -33,7 +37,7 @@ class AgeDB(Raw):
             filename, _ = os.path.splitext(os.path.basename(image))
             values = filename.split("_")
 
-            annotations.append(dict(zip(self.annotation_keys, values)))
+            annotations.append(dict(zip(self.get_annotations_keys(), values)))
 
         return annotations
 
@@ -43,7 +47,7 @@ class AgeDB(Raw):
 
         :return: image paths
         """
-        target = os.path.join(self.root_path, "*.jpg")
+        target = os.path.join(self.get_root_path(), "*.jpg")
         images = glob(target)
 
         return images

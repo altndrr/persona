@@ -21,15 +21,19 @@ class VGGFace2(Raw):
         super().__init__()
 
     @classmethod
-    def _get_root_path(cls) -> str:
+    def get_root_path(cls) -> str:
         return os.path.join("data", "raw", "vggface2")
 
     @classmethod
-    def _get_annotation_keys(cls) -> list:
+    def get_annotations_keys(cls) -> list:
         return ["class_id", "image_id", "face_id"]
 
-    def _get_path(self) -> str:
-        return os.path.join(self.root_path, self._split)
+    @classmethod
+    def is_available(cls) -> bool:
+        return os.path.exists(cls.get_root_path())
+
+    def get_path(self) -> str:
+        return os.path.join(self.get_root_path(), self._split)
 
     def _load_annotations(self) -> list:
         """
@@ -39,14 +43,14 @@ class VGGFace2(Raw):
         """
         if self.is_available:
             annotation_name = f"{self._split}_annotations.txt"
-            annotation_path = os.path.join(self.root_path, annotation_name)
+            annotation_path = os.path.join(self.get_root_path(), annotation_name)
 
             if os.path.exists(annotation_path):
                 all_values = [
                     line.strip() for line in open(annotation_path).readlines()
                 ]
                 annotations = [
-                    dict(zip(self.annotation_keys, values.split(", ")))
+                    dict(zip(self.get_annotations_keys(), values.split(", ")))
                     for values in all_values
                 ]
             else:
@@ -63,7 +67,7 @@ class VGGFace2(Raw):
                     values = [class_id, image_id, face_id]
 
                     all_values.append(", ".join(values) + "\n")
-                    annotations.append(dict(zip(self.annotation_keys, values)))
+                    annotations.append(dict(zip(self.get_annotations_keys(), values)))
 
                 open(annotation_path, "w").writelines(all_values)
 
@@ -76,10 +80,10 @@ class VGGFace2(Raw):
         :return: image paths
         """
         images = []
-        filename = os.path.join(self.root_path, f"{self._split}_list.txt")
+        filename = os.path.join(self.get_root_path(), f"{self._split}_list.txt")
         if os.path.exists(filename):
             images = [
-                os.path.join(self.root_path, *os.path.split(line.strip()))
+                os.path.join(self.get_root_path(), *os.path.split(line.strip()))
                 for line in open(filename).readlines()
             ]
 

@@ -1,6 +1,5 @@
 """Abstract class for the raw datasets"""
 
-import os
 from abc import ABC, abstractmethod
 from random import randint
 
@@ -9,26 +8,26 @@ class Raw(ABC):
     """Abstract base class for dataset"""
 
     def __init__(self):
-        self.root_path = self._get_root_path()
-        self.annotation_keys = self._get_annotation_keys()
-        self.path = self._get_path()
-        self.is_available = os.path.exists(self.path)
-
         self._images = self._load_images()
         self._annotations = self._load_annotations()
 
     @classmethod
     @abstractmethod
-    def _get_root_path(cls) -> str:
+    def get_root_path(cls) -> str:
         """Get the root path to the dataset"""
 
     @classmethod
     @abstractmethod
-    def _get_annotation_keys(cls) -> list:
+    def get_annotations_keys(cls) -> list:
         """Get the list of keys of the annotations"""
 
+    @classmethod
     @abstractmethod
-    def _get_path(self) -> str:
+    def is_available(cls) -> bool:
+        """Check if dataset is available"""
+
+    @abstractmethod
+    def get_path(self) -> str:
         """Get the complete path to the dataset"""
 
     @abstractmethod

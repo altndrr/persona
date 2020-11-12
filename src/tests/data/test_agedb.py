@@ -9,7 +9,14 @@ from src.data.agedb import AgeDB
 agedb = AgeDB()
 
 
-@pytest.mark.skipif(not agedb.is_available, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
+def test_init():
+    """Test the initialization of the AgeDB class"""
+    assert AgeDB.is_available()
+    assert len(agedb.get_path()) > 0
+
+
+@pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_get_image_annotations():
     """Test the get_image_annotations function"""
     data = {"age": "35", "class_id": "MariaCallas", "gender": "f", "image_id": "0"}
@@ -28,17 +35,17 @@ def test_get_image_annotations():
     assert agedb.get_image_annotations(index=0) == data
     assert (
         agedb.get_image_annotations(
-            image_path=os.path.join(agedb.root_path, "0_MariaCallas_35_f.jpg")
+            image_path=os.path.join(AgeDB.get_root_path(), "0_MariaCallas_35_f.jpg")
         )
         == data
     )
 
 
-@pytest.mark.skipif(not agedb.is_available, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_get_image():
     """Test the get_image function"""
     class_id = "MariaCallas"
-    data = os.path.join(agedb.root_path, "0_MariaCallas_35_f.jpg")
+    data = os.path.join(AgeDB.get_root_path(), "0_MariaCallas_35_f.jpg")
 
     with pytest.raises(IndexError):
         assert agedb.get_image(index=len(agedb._images) + 1)
@@ -51,7 +58,7 @@ def test_get_image():
     assert agedb.get_image(class_id=class_id)
 
 
-@pytest.mark.skipif(not agedb.is_available, reason="requires the agedb dataset")
+@pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_get_images():
     """Test the get_images function"""
     class_id = "MariaCallas"

@@ -9,12 +9,15 @@ from src.data.vggface2 import VGGFace2
 vggface2 = VGGFace2("test")
 
 
-@pytest.mark.skipif(not vggface2.is_available, reason="requires the vggface2 dataset")
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
 def test_init():
     """Test the initialization of the VGGFace2 class"""
 
+    assert VGGFace2.is_available()
+    assert len(vggface2.get_path()) > 0
+
     # Remove the test_annotations.txt if present to test generation and retrieval.
-    annotation_path = os.path.join(vggface2.root_path, "test_annotations.txt")
+    annotation_path = os.path.join(VGGFace2.get_root_path(), "test_annotations.txt")
     if os.path.exists(annotation_path):
         os.remove(annotation_path)
 
@@ -24,7 +27,7 @@ def test_init():
         assert VGGFace2("wrong_split")
 
 
-@pytest.mark.skipif(not vggface2.is_available, reason="requires the vggface2 dataset")
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
 def test_get_image_annotations():
     """Test the get_image_annotations function"""
     data = {"class_id": "n000001", "image_id": "0001", "face_id": "01"}
@@ -44,7 +47,7 @@ def test_get_image_annotations():
     assert (
         vggface2.get_image_annotations(
             image_path=os.path.join(
-                vggface2.root_path,
+                VGGFace2.get_root_path(),
                 data["class_id"],
                 f"{data['image_id']}_{data['face_id']}.jpg",
             )
@@ -53,12 +56,12 @@ def test_get_image_annotations():
     )
 
 
-@pytest.mark.skipif(not vggface2.is_available, reason="requires the vggface2 dataset")
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
 def test_get_image():
     """Test the get_image function"""
     class_id = "n000001"
 
-    data = os.path.join(vggface2.root_path, class_id, "0001_01.jpg")
+    data = os.path.join(VGGFace2.get_root_path(), class_id, "0001_01.jpg")
 
     with pytest.raises(IndexError):
         assert vggface2.get_image(index=len(vggface2._images) + 1)
@@ -71,7 +74,7 @@ def test_get_image():
     assert vggface2.get_image(class_id=class_id)
 
 
-@pytest.mark.skipif(not vggface2.is_available, reason="requires the vggface2 dataset")
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
 def test_get_images():
     """Test the get_images function"""
     class_id = "n000001"
