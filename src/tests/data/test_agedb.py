@@ -6,91 +6,66 @@ import pytest
 
 from src.data.agedb import AgeDB
 
-test_annotations = [
-    ({}, TypeError, None),
-    ({"image_id": -1}, ValueError, None),
-    ({"image_id": "-1"}, ValueError, None),
-    ({"image_id": True}, ValueError, None),
-    (
-        {"image_id": 0},
-        None,
-        {"age": "35", "class_id": "MariaCallas", "gender": "f", "image_id": "0"},
-    ),
-    ({"image_id": "-1"}, ValueError, None),
-    ({"image_path": "/"}, ValueError, None),
-    ({"image_path": "wrong_naming.jpg"}, ValueError, None),
-    (
-        {"image_path": os.path.join(AgeDB.ROOT_PATH, "0_MariaCallas_35_f.jpg")},
-        None,
-        {"age": "35", "class_id": "MariaCallas", "gender": "f", "image_id": "0"},
-    ),
-]
-
 
 @pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
-@pytest.mark.parametrize("options, error, output", test_annotations)
-def test_get_annotations(options, error, output):
-    """Test the get_annotation function"""
+def test_get_image_annotations():
+    """Test the get_image_annotations function"""
     agedb = AgeDB()
 
-    if error:
-        with pytest.raises(error):
-            agedb.get_image_annotations(**options)
-    elif output:
-        assert agedb.get_image_annotations(**options) == output
-    else:
-        assert agedb.get_image_annotations(**options)
+    data = {"age": "35", "class_id": "MariaCallas", "gender": "f", "image_id": "0"}
 
+    with pytest.raises(TypeError):
+        assert agedb.get_image_annotations()
 
-test_image = [
-    ({}, None, None),
-    ({"image_id": -1}, ValueError, None),
-    ({"image_id": "-1"}, ValueError, None),
-    ({"image_id": True}, ValueError, None),
-    ({"image_id": 0}, None, None),
-    ({"class_id": -1}, ValueError, None),
-    ({"class_id": "-1"}, ValueError, None),
-    ({"class_id": True}, ValueError, None),
-    ({"class_id": "MariaCallas"}, None, None),
-]
+    with pytest.raises(IndexError):
+        assert agedb.get_image_annotations(index=len(agedb._images) + 1)
+
+    with pytest.raises(ValueError):
+        assert agedb.get_image_annotations(image_path="/")
+    with pytest.raises(ValueError):
+        assert agedb.get_image_annotations(image_path="wrong_naming.jpg")
+
+    assert agedb.get_image_annotations(index=0) == data
+    assert (
+        agedb.get_image_annotations(
+            image_path=os.path.join(AgeDB.ROOT_PATH, "0_MariaCallas_35_f.jpg")
+        )
+        == data
+    )
 
 
 @pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
-@pytest.mark.parametrize("options, error, output", test_image)
-def test_get_image(options, error, output):
+def test_get_image():
     """Test the get_image function"""
     agedb = AgeDB()
 
-    if error:
-        with pytest.raises(error):
-            agedb.get_image(**options)
-    elif output:
-        assert agedb.get_image(**options) == output
-    else:
-        assert agedb.get_image(**options)
+    class_id = "MariaCallas"
+    data = os.path.join(agedb.ROOT_PATH, "0_MariaCallas_35_f.jpg")
 
+    with pytest.raises(IndexError):
+        assert agedb.get_image(index=len(agedb._images) + 1)
 
-test_images = [
-    ({}, None, 5),
-    ({"image_ids": [-1]}, ValueError, 1),
-    ({"image_ids": [True]}, ValueError, 1),
-    ({"image_ids": ["-1"]}, ValueError, 1),
-    ({"image_ids": [0, 1, 2]}, None, 3),
-    ({"class_id": -1}, ValueError, 1),
-    ({"class_id": True}, ValueError, 1),
-    ({"class_id": "MariaCallas"}, None, 24),
-    ({"n_images": -1}, ValueError, 1),
-]
+    with pytest.raises(ValueError):
+        assert agedb.get_image(class_id="wrong_class")
+
+    assert agedb.get_image()
+    assert agedb.get_image(index=0) == data
+    assert agedb.get_image(class_id=class_id)
 
 
 @pytest.mark.skipif(not AgeDB.IS_AVAILABLE, reason="requires the agedb dataset")
-@pytest.mark.parametrize("options, error, output_len", test_images)
-def test_get_images(options, error, output_len):
+def test_get_images():
     """Test the get_images function"""
     agedb = AgeDB()
 
-    if error:
-        with pytest.raises(error):
-            agedb.get_images(**options)
-    else:
-        assert len(agedb.get_images(**options)) == output_len
+    class_id = "MariaCallas"
+
+    with pytest.raises(ValueError):
+        assert agedb.get_images(class_id="wrong_class")
+
+    with pytest.raises(ValueError):
+        assert agedb.get_images(n_images=-1)
+
+    assert len(agedb.get_images(n_images=10)) == 10
+    assert len(agedb.get_images(indexes=[0, 1, 2])) == 3
+    assert len(agedb.get_images(class_id=class_id)) == 24
