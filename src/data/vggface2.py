@@ -67,7 +67,7 @@ class VGGFace2:
         :return: image paths
         """
         images = [
-            line.strip()
+            os.path.join(self.ROOT_PATH, *os.path.split(line.strip()))
             for line in open(
                 os.path.join(self.ROOT_PATH, f"{self._split}_list.txt")
             ).readlines()
