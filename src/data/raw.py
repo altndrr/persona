@@ -16,7 +16,7 @@ class Raw(ABC):
         return len(self._images)
 
     def __getitem__(self, index: int) -> (str, dict):
-        return self._images[index], self._annotations[0]
+        return self._images[index], self._annotations[index]
 
     @classmethod
     @abstractmethod

@@ -26,11 +26,11 @@ def main():
 
 
 def code(options):
-    """Code format management command"""
+    """Code management command"""
     if options["--format"] or options["-f"]:
         os.system("black src && isort src")
 
-    if options["--format"] or options["-l"]:
+    if options["--lint"] or options["-l"]:
         os.system("pylint src")
 
     if options["--test"] or options["-t"]:
