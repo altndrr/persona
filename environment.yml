@@ -1,17 +1,24 @@
 name: face-recognition
 channels:
+  - pytorch
   - defaults
 dependencies:
   - python=3.8
+  - black
+  - cudatoolkit
+  - docopt
+  - jupyter
+  - matplotlib
   - numpy
   - pandas
-  - matplotlib
-  - pytorch
-  - seaborn
-  - docopt
+  - pip
   - pylint
   - pytest
   - pytest-cov
   - pytest-timeout
   - pytest-xdist
-  - black
+  - pytorch
+  - seaborn
+  - torchvision
+  - pip:
+      - facenet-pytorch
