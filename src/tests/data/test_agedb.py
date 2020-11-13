@@ -12,6 +12,7 @@ agedb = AgeDB()
 @pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_init():
     """Test the initialization of the AgeDB class"""
+    assert agedb[0]
     assert AgeDB.is_available()
     assert len(agedb.get_path()) > 0
 

@@ -11,6 +11,12 @@ class Raw(ABC):
         self._images = self._load_images()
         self._annotations = self._load_annotations()
 
+    def __len__(self):
+        return len(self._images)
+
+    def __getitem__(self, index: int) -> (str, dict):
+        return self._images[index], self._annotations[0]
+
     @classmethod
     @abstractmethod
     def get_root_path(cls) -> str:

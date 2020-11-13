@@ -12,7 +12,7 @@ vggface2 = VGGFace2("test")
 @pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
 def test_init():
     """Test the initialization of the VGGFace2 class"""
-
+    assert vggface2[0]
     assert VGGFace2.is_available()
     assert len(vggface2.get_path()) > 0
 
