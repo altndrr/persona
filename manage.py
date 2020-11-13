@@ -3,7 +3,6 @@ manage
 
 Usage:
     manage code (format | lint | test)
-    manage env export
     manage -h | --help
 
 Options:
@@ -36,20 +35,6 @@ def code(options):
         os.system(
             "pytest --cov=src --cov-report term-missing \
                    -n auto --timeout=60 src"
-        )
-
-
-def env(options):
-    """Env management command"""
-    if options["export"]:
-        print("Exporting conda packages to `environment.yml`...")
-
-        # Get the name of the search utility given the os.
-        utility = "findstr" if os.name == "nt" else "grep"
-
-        os.system(
-            f'conda env export --from-history --no-builds | \
-                    {utility} -v "prefix" > environment.yml'
         )
 
 
