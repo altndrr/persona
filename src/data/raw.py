@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from random import randint
+from typing import List
 
 
 class Raw(ABC):
@@ -24,7 +25,7 @@ class Raw(ABC):
 
     @classmethod
     @abstractmethod
-    def get_annotations_keys(cls) -> list:
+    def get_annotations_keys(cls) -> List[str]:
         """Get the list of keys of the annotations"""
 
     @classmethod
@@ -37,11 +38,11 @@ class Raw(ABC):
         """Get the complete path to the dataset"""
 
     @abstractmethod
-    def _load_images(self) -> list:
+    def _load_images(self) -> List[str]:
         """Load the list of images"""
 
     @abstractmethod
-    def _load_annotations(self) -> list:
+    def _load_annotations(self) -> List[dict]:
         """Load the list of annotations"""
 
     def get_image_annotations(self, index: int = None, image_path: str = None) -> dict:
@@ -106,7 +107,7 @@ class Raw(ABC):
 
     def get_images(
         self, indexes: list = None, class_id: str = None, n_images: int = 5
-    ) -> list:
+    ) -> List[str]:
         """
         Get a list of paths to images. If neither the list of image ids nor a class of images is
         passed, a list of n random image is returned.

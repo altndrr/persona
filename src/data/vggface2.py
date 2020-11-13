@@ -1,6 +1,7 @@
 """Collection of classes and functions for the VGGFace2 dataset"""
 
 import os
+from typing import List
 
 from src.data.raw import Raw
 
@@ -25,7 +26,7 @@ class VGGFace2(Raw):
         return os.path.join("data", "raw", "vggface2")
 
     @classmethod
-    def get_annotations_keys(cls) -> list:
+    def get_annotations_keys(cls) -> List[str]:
         return ["class_id", "image_id", "face_id"]
 
     @classmethod
@@ -35,7 +36,7 @@ class VGGFace2(Raw):
     def get_path(self) -> str:
         return os.path.join(self.get_root_path(), self._split)
 
-    def _load_annotations(self) -> list:
+    def _load_annotations(self) -> List[dict]:
         """
         Load the list of annotations of the defined split
 

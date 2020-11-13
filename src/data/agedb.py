@@ -2,6 +2,7 @@
 
 import os
 from glob import glob
+from typing import List
 
 from src.data.raw import Raw
 
@@ -14,7 +15,7 @@ class AgeDB(Raw):
         return os.path.join("data", "raw", "agedb")
 
     @classmethod
-    def get_annotations_keys(cls) -> list:
+    def get_annotations_keys(cls) -> List[str]:
         return ["image_id", "class_id", "age", "gender"]
 
     @classmethod
@@ -24,7 +25,7 @@ class AgeDB(Raw):
     def get_path(self) -> str:
         return self.get_root_path()
 
-    def _load_annotations(self) -> list:
+    def _load_annotations(self) -> List[dict]:
         """
         Load the list of annotations
 
