@@ -2,7 +2,7 @@
 manage
 
 Usage:
-    manage code (format | lint | test)
+    manage code (-f | --format | -l | --lint | -t | --test)...
     manage -h | --help
 
 Options:
@@ -26,12 +26,14 @@ def main():
 
 
 def code(options):
-    """Code management command"""
-    if options["format"]:
+    """Code format management command"""
+    if options["--format"] or options["-f"]:
         os.system("black src && isort src")
-    elif options["lint"]:
+
+    if options["--format"] or options["-l"]:
         os.system("pylint src")
-    elif options["test"]:
+
+    if options["--test"] or options["-t"]:
         os.system(
             "pytest --cov=src --cov-report term-missing \
                    -n auto --timeout=60 src"
