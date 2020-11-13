@@ -13,6 +13,7 @@ vggface2 = VGGFace2("test")
 def test_init():
     """Test the initialization of the VGGFace2 class"""
     assert vggface2[0]
+    assert len(vggface2) > 0
     assert VGGFace2.is_available()
     assert len(vggface2.get_path()) > 0
 
@@ -27,64 +28,48 @@ def test_init():
         assert VGGFace2("wrong_split")
 
 
-@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
-def test_get_image_annotations():
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the agedb dataset")
+def test_get_annotations():
     """Test the get_image_annotations function"""
+    class_id = "n000001"
     data = {"class_id": "n000001", "image_id": "0001", "face_id": "01"}
-
-    with pytest.raises(TypeError):
-        assert vggface2.get_image_annotations()
-
-    with pytest.raises(IndexError):
-        assert vggface2.get_image_annotations(index=len(vggface2._images) + 1)
-
-    with pytest.raises(ValueError):
-        assert vggface2.get_image_annotations(image_path="/")
-    with pytest.raises(ValueError):
-        assert vggface2.get_image_annotations(image_path="wrong_naming.jpg")
-
-    assert vggface2.get_image_annotations(index=0) == data
-    assert (
-        vggface2.get_image_annotations(
-            image_path=os.path.join(
-                VGGFace2.get_root_path(),
-                data["class_id"],
-                f"{data['image_id']}_{data['face_id']}.jpg",
-            )
-        )
-        == data
+    image_path = os.path.join(
+        VGGFace2.get_root_path(),
+        data["class_id"],
+        f"{data['image_id']}_{data['face_id']}.jpg",
     )
 
-
-@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
-def test_get_image():
-    """Test the get_image function"""
-    class_id = "n000001"
-
-    data = os.path.join(VGGFace2.get_root_path(), class_id, "0001_01.jpg")
-
     with pytest.raises(IndexError):
-        assert vggface2.get_image(index=len(vggface2._images) + 1)
+        assert vggface2.get_annotations(len(vggface2._images) + 1)
 
+    assert vggface2.get_annotations(0)
+    assert vggface2.get_annotations(0, 1)
     with pytest.raises(ValueError):
-        assert vggface2.get_image(class_id="wrong_class")
+        assert vggface2.get_annotations(image_paths="/")
+    with pytest.raises(ValueError):
+        assert vggface2.get_annotations(image_paths="wrong_naming.jpg")
+    assert vggface2.get_annotations(image_paths=image_path)
+    assert vggface2.get_annotations(image_paths=[image_path, image_path])
+    assert vggface2.get_annotations(class_id=class_id)
+    with pytest.raises(ValueError):
+        assert vggface2.get_annotations(class_id="wrong_class")
+    assert len(vggface2.get_annotations(n_random=5)) == 5
+    assert vggface2.get_annotations(0) == data
 
-    assert vggface2.get_image()
-    assert vggface2.get_image(index=0) == data
-    assert vggface2.get_image(class_id=class_id)
 
-
-@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the vggface2 dataset")
+@pytest.mark.skipif(not VGGFace2.is_available(), reason="requires the agedb dataset")
 def test_get_images():
     """Test the get_images function"""
     class_id = "n000001"
+    data = "data\\raw\\vggface2\\n000001\\0001_01.jpg"
 
+    with pytest.raises(IndexError):
+        assert vggface2.get_images(len(vggface2._images) + 1)
+
+    assert vggface2.get_images(0)
+    assert vggface2.get_images(0, 1)
+    assert vggface2.get_images(class_id=class_id)
     with pytest.raises(ValueError):
         assert vggface2.get_images(class_id="wrong_class")
-
-    with pytest.raises(ValueError):
-        assert vggface2.get_images(n_images=-1)
-
-    assert len(vggface2.get_images(n_images=10)) == 10
-    assert len(vggface2.get_images(indexes=[0, 1, 2])) == 3
-    assert len(vggface2.get_images(class_id=class_id)) == 424
+    assert len(vggface2.get_images(n_random=5)) == 5
+    assert vggface2.get_images(0) == data

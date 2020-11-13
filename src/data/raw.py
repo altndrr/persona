@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from random import randint
-from typing import List
+from typing import List, Union
 
 
 class Raw(ABC):
@@ -45,81 +45,85 @@ class Raw(ABC):
     def _load_annotations(self) -> List[dict]:
         """Load the list of annotations"""
 
-    def get_image_annotations(self, index: int = None, image_path: str = None) -> dict:
+    def get_annotations(
+        self,
+        *ids: int,
+        image_paths: Union[str, List[str]] = None,
+        class_id=None,
+        n_random: int = 1,
+    ) -> Union[dict, List[dict]]:
         """
-        Get the annotations of an image
+        Get image annotations. Annotations can be retrieved in three modalities: given their ids,
+        specifying their class or at random.
 
-        :param index: index of the image
-        :param image_path: path to the image
-        :return: image annotations
-        :raises IndexError, TypeError, ValueError:
-        """
-
-        if index is not None:
-            if index <= len(self._annotations) - 1:
-                annotations = self._annotations[index]
-            else:
-                raise IndexError(f"`{index} is not a valid index`")
-        elif image_path is not None:
-            if image_path not in self._images:
-                raise ValueError(
-                    f"`{image_path} does not refer to an image of the dataset`"
-                )
-
-            index = self._images.index(image_path)
-            annotations = self._annotations[index]
-        else:
-            raise TypeError("either `index` or `image_path` must be passed")
-
-        return annotations
-
-    def get_image(self, index: int = None, class_id: str = None) -> str:
-        """
-        Get the path to an image. If neither the id of the image nor the id of a class of images
-        is passed, a random image is returned.
-
-        :param index: index of the image
-        :param class_id: unique identifier of a class of images
-        :return: path to the image
+        :param ids: list of unique identifier of images
+        :param image_paths: list of paths to images
+        :param class_id: unique identifier of the class of images
+        :param n_random: number of annotations to get randomly
+        :return: path to images
         :raises IndexError, ValueError:
         """
+        annotations = []
 
-        if index is not None:
-            if index <= len(self._images) - 1:
-                image = self._images[index]
-            else:
-                raise IndexError(f"`{index} is not a valid index`")
-        elif class_id is not None:
-            class_images = [
-                image
-                for i, image in enumerate(self._images)
+        if ids:
+            for _id in ids:
+                if _id <= len(self._annotations) - 1:
+                    annotations.append(self._annotations[_id])
+                else:
+                    raise IndexError(f"`{_id} is not a valid index`")
+        elif class_id:
+            annotations = [
+                annotation
+                for i, annotation in enumerate(self._annotations)
                 if self._annotations[i]["class_id"] == class_id
             ]
 
-            if len(class_images) == 0:
+            if len(annotations) == 0:
                 raise ValueError(f"`{class_id}` is an invalid class identifier")
+        elif image_paths:
+            if isinstance(image_paths, str):
+                image_paths = [image_paths]
 
-            image = class_images[randint(0, len(class_images) - 1)]
+            ids = []
+            for image_path in image_paths:
+                if image_path in self._images:
+                    ids.append(self._images.index(image_path))
+                else:
+                    raise ValueError(f"{image_path} is an invalid image path")
+
+            annotations = self.get_annotations(*ids)
         else:
-            image = self._images[randint(0, len(self._images) - 1)]
+            annotations = [
+                self._annotations[randint(0, len(self._annotations) - 1)]
+                for _ in range(n_random)
+            ]
 
-        return image
+        if len(annotations) == 1:
+            annotations = annotations[0]
+
+        return annotations
 
     def get_images(
-        self, indexes: list = None, class_id: str = None, n_images: int = 5
-    ) -> List[str]:
+        self, *ids: int, class_id: str = None, n_random: int = 1
+    ) -> Union[str, list]:
         """
-        Get a list of paths to images. If neither the list of image ids nor a class of images is
-        passed, a list of n random image is returned.
+        Get paths to images. Paths can be retrieved in three modalities: given their ids, specifying
+        their class or at random.
 
-        :param indexes: list of indexes to images
-        :param class_id: unique identifier of a class of images
-        :param n_images: number of random images to retrieve
-        :return: list of path to images
-        :raises ValueError:
+        :param ids: list of unique identifier of images
+        :param class_id: unique identifier of the class of images
+        :param n_random: number of paths to get randomly
+        :return: path to images
+        :raises IndexError, ValueError:
         """
-        if indexes:
-            images = [self.get_image(index=index) for index in indexes]
+        images = []
+
+        if ids:
+            for _id in ids:
+                if _id <= len(self._images) - 1:
+                    images.append(self._images[_id])
+                else:
+                    raise IndexError(f"`{_id} is not a valid index`")
         elif class_id:
             images = [
                 image
@@ -130,11 +134,11 @@ class Raw(ABC):
             if len(images) == 0:
                 raise ValueError(f"`{class_id}` is an invalid class identifier")
         else:
-            if n_images >= len(self._images) or n_images < 1:
-                raise ValueError(
-                    f"`{n_images}` is an invalid number of images to retrieve"
-                )
+            images = [
+                self._images[randint(0, len(self._images) - 1)] for _ in range(n_random)
+            ]
 
-            images = [self.get_image() for _ in range(n_images)]
+        if len(images) == 1:
+            images = images[0]
 
         return images

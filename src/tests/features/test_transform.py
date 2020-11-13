@@ -14,8 +14,7 @@ age = AgeDB()
 @pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_align_images():
     """Test the align_images function"""
-    image_path_1 = age.get_image(index=0)
-    image_path_2 = age.get_image(index=1)
+    image_path_1, image_path_2 = age.get_images(0, 1)
 
     generated_image = ToPILImage()(torch.ones(3, 160, 160))
 
@@ -36,8 +35,7 @@ def test_align_images():
 @pytest.mark.skipif(not AgeDB.is_available(), reason="requires the agedb dataset")
 def test_conversions():
     """Test the images_to_tensors and tensors_to_images functions"""
-    image_path_1 = age.get_image(index=0)
-    image_path_2 = age.get_image(index=1)
+    image_path_1, image_path_2 = age.get_images(0, 1)
 
     with pytest.raises(FileNotFoundError):
         transform.images_to_tensors("")
