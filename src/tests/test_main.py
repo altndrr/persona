@@ -1,17 +1,10 @@
 """Test the main module."""
 
 import os
-
-import pytest
+from glob import glob
 
 import src
-
-test_options = [
-    (None, 1),
-    ("-h", 0),
-    ("--help", 0),
-    ("--version", 0),
-]
+from src.utils import path
 
 
 def test_init():
@@ -19,7 +12,34 @@ def test_init():
     assert hasattr(src, "__version__")
 
 
-@pytest.mark.parametrize("options, output", test_options)
-def test_main(options, output):
+def test_main():
     """Test the main file"""
-    assert os.system(f"python -m src {options}") == output
+    assert os.system("python -m src") == 1
+    assert os.system("python -m src -h") == 0
+    assert os.system("python -m src --help") == 0
+    assert os.system("python -m src --version") == 0
+
+
+def test_generate():
+    """Test the generate command"""
+    pre_files = glob(
+        os.path.join(path.get_project_root(), "data", "processed", "triplets", "*.npy")
+    )
+    assert os.system("python -m src generate triplets") == 1
+    assert os.system("python -m src generate triplets -n X -p 1 agedb") == 1
+    assert os.system("python -m src generate triplets -n 1 -p Y agedb") == 1
+
+    assert os.system("python -m src generate triplets -n -100 -p 1 agedb") == 1
+    assert os.system("python -m src generate triplets -n 1 -p -100 agedb") == 1
+
+    assert os.system("python -m src generate triplets -n 1 -p 1 agedb") == 0
+    assert os.system("python -m src generate triplets -n 1 -p 1 vggface2 test") == 0
+    assert os.system("python -m src generate triplets -n 1 -p 0 wrong_name") == 1
+
+    post_files = glob(
+        os.path.join(path.get_project_root(), "data", "processed", "triplets", "*.npy")
+    )
+
+    created_files = list(set(post_files) - set(pre_files))
+    for file in created_files:
+        os.remove(file)
