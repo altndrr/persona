@@ -20,5 +20,6 @@ dependencies:
   - pytorch
   - seaborn
   - torchvision
+  - tqdm
   - pip:
       - facenet-pytorch
