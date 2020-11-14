@@ -36,7 +36,7 @@ def code(options):
     if options["--test"] or options["-t"]:
         os.system(
             "pytest --cov=src --cov-report term-missing \
-                   -n auto --timeout=60 src"
+                   -n auto --timeout=180 src"
         )
 
 
