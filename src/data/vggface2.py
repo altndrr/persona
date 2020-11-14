@@ -33,6 +33,9 @@ class VGGFace2(Raw):
     def is_available(cls) -> bool:
         return os.path.exists(cls.get_root_path())
 
+    def get_name(self):
+        return f"vggface2_{self._split}"
+
     def get_path(self) -> str:
         return os.path.join(self.get_root_path(), self._split)
 

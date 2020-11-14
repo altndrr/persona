@@ -13,6 +13,7 @@ agedb = AgeDB()
 def test_init():
     """Test the initialization of the AgeDB class"""
     assert agedb[0]
+    assert len(agedb.get_name()) > 0
     assert len(agedb) > 0
     assert AgeDB.is_available()
     assert len(agedb.get_path()) > 0

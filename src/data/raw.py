@@ -38,6 +38,10 @@ class Raw(ABC):
         """Get the complete path to the dataset"""
 
     @abstractmethod
+    def get_name(self):
+        """Get the name of the dataset"""
+
+    @abstractmethod
     def _load_images(self) -> List[str]:
         """Load the list of images"""
 

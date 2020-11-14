@@ -22,6 +22,9 @@ class AgeDB(Raw):
     def is_available(cls) -> bool:
         return os.path.exists(cls.get_root_path())
 
+    def get_name(self):
+        return "agedb"
+
     def get_path(self) -> str:
         return self.get_root_path()
 
