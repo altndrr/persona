@@ -81,9 +81,8 @@ python manage.py
 Doing so with no option will display the `help` document.
 
 Some examples of usage are:
-1. `python manage.py code lint`: perform static analysis of the code.
-2. `python manage.py code test`: run parallel tests with coverage.
-3. `python manage.py env export`: generate a platform-independent `environment.yml` file;
+1. `python manage.py code --lint`: perform static analysis of the code.
+2. `python manage.py code --test`: run parallel tests with coverage.
 
 ### Source module
 
