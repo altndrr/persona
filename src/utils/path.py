@@ -50,3 +50,8 @@ def change_data_category(path: str, category: str) -> str:
     parts[index + 1] = category
 
     return os.path.join(*parts)
+
+
+def get_project_root() -> str:
+    """Get the root of the project"""
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
