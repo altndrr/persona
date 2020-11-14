@@ -86,7 +86,7 @@ class VGGFace2(Raw):
         filename = os.path.join(self.get_root_path(), f"{self._split}_list.txt")
         if os.path.exists(filename):
             images = [
-                os.path.join(self.get_root_path(), *os.path.split(line.strip()))
+                os.path.join(self.get_path(), *os.path.split(line.strip()))
                 for line in open(filename).readlines()
             ]
 

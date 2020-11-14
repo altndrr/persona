@@ -34,7 +34,7 @@ def test_get_annotations():
     class_id = "n000001"
     data = {"class_id": "n000001", "image_id": "0001", "face_id": "01"}
     image_path = os.path.join(
-        VGGFace2.get_root_path(),
+        vggface2.get_path(),
         data["class_id"],
         f"{data['image_id']}_{data['face_id']}.jpg",
     )
@@ -61,7 +61,7 @@ def test_get_annotations():
 def test_get_images():
     """Test the get_images function"""
     class_id = "n000001"
-    data = "data\\raw\\vggface2\\n000001\\0001_01.jpg"
+    data = "data\\raw\\vggface2\\test\\n000001\\0001_01.jpg"
 
     with pytest.raises(IndexError):
         assert vggface2.get_images(len(vggface2._images) + 1)
