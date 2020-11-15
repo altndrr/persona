@@ -21,23 +21,22 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
     progress_bar = tqdm(range(int(n_triplets)))
 
     for _ in progress_bar:
-        pos_class = random.choice(classes)
-        pos_images = dataset.get_images(class_id=pos_class)
-        while len(pos_images) < 2:
+        pos_class = neg_class = None
+        pos_images = None
+        positive = negative = None
+
+        while pos_class is None or len(pos_images) < 2:
             pos_class = random.choice(classes)
             pos_images = dataset.get_images(class_id=pos_class)
 
-        neg_class = random.choice(classes)
-        while neg_class == pos_class:
+        while neg_class is None or neg_class == pos_class:
             neg_class = random.choice(classes)
 
         anchor = random.choice(pos_images)
-        positive = random.choice(pos_images)
-        while anchor == positive:
+        while positive is None or anchor == positive:
             positive = random.choice(pos_images)
 
-        negative = dataset.get_images(n_random=1)
-        while negative in pos_images:
+        while negative is None or negative in pos_images:
             negative = dataset.get_images(n_random=1)
 
         aligned_images = transform.align_images(anchor, positive, negative)
@@ -82,11 +81,7 @@ def triplets(dataset: Raw, n_triplets: int, n_processes: int):
     print(f"Generating {n_triplets} triplets using {n_processes} processes...")
 
     triplet_residual = n_triplets % n_processes
-
-    if triplet_residual == 0:
-        n_triplets_per_process = n_triplets / n_processes
-    else:
-        n_triplets_per_process = (n_triplets - triplet_residual) / n_processes
+    n_triplets_per_process = (n_triplets - triplet_residual) / n_processes
 
     processes = []
     for i in range(n_processes):
@@ -102,8 +97,8 @@ def triplets(dataset: Raw, n_triplets: int, n_processes: int):
     for process in processes:
         process.join()
 
-    if triplet_residual != 0:
-        _triplets(dataset, triplet_residual, n_processes + 1)
+    # Generate residual triplets.
+    _triplets(dataset, triplet_residual, n_processes + 1)
 
     temp_path = path.change_data_category(dataset.get_path(), "interim")
     numpy_files = glob(os.path.join(temp_path, "*.npy"))
