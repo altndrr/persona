@@ -15,8 +15,7 @@ import os
 from docopt import docopt
 
 from src import __version__
-from src.data.agedb import AgeDB
-from src.data.vggface2 import VGGFace2
+from src.data.raw import AgeDB, VGGFace2
 from src.features.generate import triplets
 
 

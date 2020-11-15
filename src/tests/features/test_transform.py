@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 from torchvision.transforms import ToPILImage
 
-from src.data.agedb import AgeDB
+from src.data.raw import AgeDB
 from src.features import transform
 
 age = AgeDB()

@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from src.data.vggface2 import VGGFace2
+from src.data.raw import VGGFace2
 
 vggface2 = VGGFace2("test")
 
@@ -41,7 +41,7 @@ def test_get_annotations():
     )
 
     with pytest.raises(IndexError):
-        assert vggface2.get_annotations(len(vggface2._images) + 1)
+        assert vggface2.get_annotations(len(vggface2) + 1)
 
     assert vggface2.get_annotations(0)
     assert vggface2.get_annotations(0, 1)
@@ -65,7 +65,7 @@ def test_get_images():
     data = "data\\raw\\vggface2\\test\\n000001\\0001_01.jpg"
 
     with pytest.raises(IndexError):
-        assert vggface2.get_images(len(vggface2._images) + 1)
+        assert vggface2.get_images(len(vggface2) + 1)
 
     assert vggface2.get_images(0)
     assert vggface2.get_images(0, 1)

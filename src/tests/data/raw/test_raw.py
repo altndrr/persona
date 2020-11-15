@@ -9,7 +9,9 @@ from src.data.raw import Raw
 def test_implementation():
     """Test the implementation of a Raw dataset"""
 
-    class WrongRawImplementation(Raw):
+    class BadRawImplementation(Raw):
+        """Bad implementation of a raw dataset"""
+
         @classmethod
         def get_root_path(cls) -> str:
             return ""
@@ -35,4 +37,4 @@ def test_implementation():
             return None
 
     with pytest.raises(NotImplementedError):
-        assert WrongRawImplementation()
+        assert BadRawImplementation()

@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from src.data.agedb import AgeDB
+from src.data.raw import AgeDB
 
 agedb = AgeDB()
 
@@ -27,7 +27,7 @@ def test_get_annotations():
     image_path = os.path.join(AgeDB.get_root_path(), "0_MariaCallas_35_f.jpg")
 
     with pytest.raises(IndexError):
-        assert agedb.get_annotations(len(agedb._images) + 1)
+        assert agedb.get_annotations(len(agedb) + 1)
 
     assert agedb.get_annotations(0)
     assert agedb.get_annotations(0, 1)
@@ -51,7 +51,7 @@ def test_get_images():
     data = "data\\raw\\agedb\\0_MariaCallas_35_f.jpg"
 
     with pytest.raises(IndexError):
-        assert agedb.get_images(len(agedb._images) + 1)
+        assert agedb.get_images(len(agedb) + 1)
 
     assert agedb.get_images(0)
     assert agedb.get_images(0, 1)
