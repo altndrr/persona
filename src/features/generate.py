@@ -42,17 +42,18 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
         aligned_images = transform.align_images(anchor, positive, negative)
 
         if len(aligned_images) == 3:
-            triplet_list.append([anchor, positive, negative, pos_class, neg_class])
+            image_paths = [
+                path.change_data_category(image_path, "processed")
+                for image_path in [anchor, positive, negative]
+            ]
 
-            for aligned_image, original_path in zip(
-                aligned_images, [anchor, positive, negative]
-            ):
-                abs_original_path = os.path.join(path.get_project_root(), original_path)
-                save_path, save_name = os.path.split(abs_original_path)
+            triplet_list.append([*image_paths, pos_class, pos_class, neg_class])
+
+            for aligned_image, image_path in zip(aligned_images, image_paths):
+                abs_image_path = os.path.join(path.get_project_root(), image_path)
+                save_path, save_name = os.path.split(abs_image_path)
                 os.makedirs(save_path, exist_ok=True)
-                save_image(
-                    aligned_image, path.change_data_category(original_path, "processed")
-                )
+                save_image(aligned_image, image_path)
 
     # Update the total value of triplets, since some could have been discarded (i.e. not able to
     # align, or other reason)
