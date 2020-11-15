@@ -9,6 +9,11 @@ class Raw(ABC):
     """Abstract base class for dataset"""
 
     def __init__(self):
+        if "class_id" not in self.get_annotations_keys():
+            raise NotImplementedError(
+                "the key `class_id` must be included in the annotation keys of the class"
+            )
+
         self._images = self._load_images()
         self._annotations = self._load_annotations()
 
