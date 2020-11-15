@@ -25,7 +25,7 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
         pos_images = None
         positive = negative = None
 
-        while pos_class is None or len(pos_images) < 2:
+        while pos_class is None or len(pos_images) < 2 or isinstance(pos_images, str):
             pos_class = random.choice(classes)
             pos_images = dataset.get_images(class_id=pos_class)
 
@@ -112,7 +112,6 @@ def triplets(dataset: Raw, n_triplets: int, n_processes: int):
     # align, or other reason)
     n_triplets = len(triplet_list)
 
-    file_path = os.path.dirname(__file__)
     save_path = os.path.join(path.get_project_root(), "data", "processed", "triplets")
     os.makedirs(save_path, exist_ok=True)
 
