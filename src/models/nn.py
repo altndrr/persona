@@ -1,11 +1,11 @@
 """Collection of mobilenet implementations"""
 
 import torch
-from torchvision.models import mobilenet_v2
+import torchvision.models
 
 
 def mobilenet_v2():
-    student = mobilenet_v2(pretrained=False)
+    student = torchvision.models.mobilenet_v2(pretrained=False)
 
     student.classifier = torch.nn.Sequential(
         # Keep the same dropout as of the base mobilenet.

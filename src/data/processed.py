@@ -78,7 +78,7 @@ class TripletDataset(torch.utils.data.Dataset):
 
     @staticmethod
     def collate_fn(
-            batch: List[Tuple[List[Tensor], List[str]]]
+        batch: List[Tuple[List[Tensor], List[str]]]
     ) -> Tuple[Tensor, List[str]]:
         """Collate function for the dataset
 

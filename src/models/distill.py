@@ -1,8 +1,106 @@
 """Collection of functions to distill knowledge from facenet to a student"""
 
+import os
+from glob import glob
+from typing import Dict
+
+import numpy as np
 import torch
 import torch.utils.data
+from facenet_pytorch import InceptionResnetV1
+from torch import optim
 from torch.nn import functional
+
+from src.data.processed import TripletDataset
+
+
+def distill(
+    student: torch.nn.Module,
+    datasets: Dict[str, TripletDataset],
+    initial_temperature: int = 10,
+    temperature_decay: str = "linear",
+    batch_size: int = 16,
+    epochs: int = 10,
+    num_workers: int = 8,
+):
+    """
+    Distill a student network with the knowledge of an InceptionResnetV1 teacher.
+
+    :param student: student network
+    :param datasets: dictionary containing the train and test datasets
+    :param initial_temperature: initial temperature for distillation
+    :param temperature_decay: either constant or linear, defines how temperature changes over time
+    :param batch_size: size of the batch for the train and test data loaders
+    :param epochs: number of epochs to train
+    :param num_workers: number of workers to use for each data loader
+    :return:
+    """
+
+    if datasets["train"].get_name() != "vggface2_train":
+        raise ValueError(
+            "the train dataset must be based on the train partition of the vggface2 raw dataset"
+        )
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    student.to(device)
+    student.train()
+
+    teacher = InceptionResnetV1(pretrained="vggface2", classify=True)
+    teacher.to(device)
+    teacher.eval()
+
+    loaders = {
+        "train": torch.utils.data.DataLoader(
+            datasets["train"],
+            batch_size=batch_size,
+            collate_fn=TripletDataset.collate_fn,
+            num_workers=num_workers,
+        ),
+        "test": torch.utils.data.DataLoader(
+            datasets["test"],
+            batch_size=batch_size,
+            collate_fn=TripletDataset.collate_fn,
+            num_workers=num_workers,
+        ),
+    }
+    optimizer = optim.Adam(student.parameters(), lr=0.001)
+    scheduler_milestones = np.linspace(0, epochs, 5, dtype=np.int)[1:-1]
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, scheduler_milestones)
+
+    classes = [
+        os.path.basename(folder)
+        for folder in glob(os.path.join("data", "raw", "vggface2", "train", "*"))
+    ]
+
+    def get_temperatures(start_temperature, size, decay):
+        assert decay in ["constant", "linear", "quadratic"]
+
+        if decay == "constant":
+            return (np.ones(size) * start_temperature).tolist()
+        elif decay == "linear":
+            return np.linspace(start_temperature, 1.0, size).tolist()
+
+    temperatures = get_temperatures(initial_temperature, epochs, temperature_decay)
+
+    for epoch in range(epochs):
+        print(f"\nEpoch {epoch + 1}, temperature = {temperatures[epoch]}")
+
+        print("Training:")
+        _train_step(
+            student,
+            teacher,
+            classes,
+            loaders["train"],
+            temperatures[epoch],
+            optimizer,
+            epoch,
+            device,
+        )
+        scheduler.step()
+
+        print("Testing:")
+        _test_step(student, teacher, loaders["test"], device)
 
 
 def _test_step(student, teacher, loader, device):
