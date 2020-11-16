@@ -5,6 +5,41 @@ import torch.utils.data
 from torch.nn import functional
 
 
+def _test_step(student, teacher, loader, device):
+    student.eval()
+
+    teacher_match_accuracy = 0
+    student_match_accuracy = 0
+
+    for _, sample in enumerate(loader):
+        inputs, _ = sample
+        inputs = inputs.to(device)
+
+        student_outputs = student(inputs)
+        teacher_outputs = teacher(inputs)
+
+        # Evaluate match_accuracy.
+        for i in range(0, len(inputs), 3):
+            triplet = student_outputs[i : i + 3]
+            student_match_distance = [
+                (triplet[0] - triplet[1]).norm().item(),
+                (triplet[0] - triplet[2]).norm().item(),
+            ]
+            if student_match_distance[0] < student_match_distance[1]:
+                student_match_accuracy += 1
+
+            triplet = teacher_outputs[i : i + 3]
+            teacher_match_distance = [
+                (triplet[0] - triplet[1]).norm().item(),
+                (triplet[0] - triplet[2]).norm().item(),
+            ]
+            if teacher_match_distance[0] < teacher_match_distance[1]:
+                teacher_match_accuracy += 1
+
+    print(f" - Student match accuracy: {student_match_accuracy / len(loader.dataset)}")
+    print(f" - Teacher match accuracy: {teacher_match_accuracy / len(loader.dataset)}")
+
+
 def _train_step(
     student,
     teacher,
