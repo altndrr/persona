@@ -1,6 +1,6 @@
 """The base command."""
 
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 
 
 class Base(ABC):
