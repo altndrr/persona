@@ -100,50 +100,33 @@ def distill(
         scheduler.step()
 
         print("Testing:")
-        _test_step(student, teacher, loaders["test"], device)
+        _test_step(student, loaders["test"], device)
 
     return student
 
 
-def _test_step(student, teacher, loader, device):
-    student.eval()
+def _test_step(model, loader, device):
+    model.eval()
 
-    teacher_match_accuracy = 0
-    student_match_accuracy = 0
+    match_accuracy = 0
 
     for _, sample in enumerate(loader):
         inputs, _ = sample
         inputs = inputs.to(device)
 
-        student_outputs = student(inputs)
+        outputs = model(inputs)
 
-        if teacher:
-            teacher_outputs = teacher(inputs)
-
-        # Evaluate match_accuracy.
+        # Evaluate match accuracy.
         for i in range(0, len(inputs), 3):
-            triplet = student_outputs[i : i + 3]
-            student_match_distance = [
+            triplet = outputs[i: i + 3]
+            distance = [
                 (triplet[0] - triplet[1]).norm().item(),
                 (triplet[0] - triplet[2]).norm().item(),
             ]
-            if student_match_distance[0] < student_match_distance[1]:
-                student_match_accuracy += 1
+            if distance[0] < distance[1]:
+                match_accuracy += 1
 
-            if teacher:
-                triplet = teacher_outputs[i : i + 3]
-                teacher_match_distance = [
-                    (triplet[0] - triplet[1]).norm().item(),
-                    (triplet[0] - triplet[2]).norm().item(),
-                ]
-                if teacher_match_distance[0] < teacher_match_distance[1]:
-                    teacher_match_accuracy += 1
-
-    print(f" - Student match accuracy: {student_match_accuracy / len(loader.dataset)}")
-    if teacher:
-        print(
-            f" - Teacher match accuracy: {teacher_match_accuracy / len(loader.dataset)}"
-        )
+    print(f"Match accuracy: {match_accuracy / len(loader.dataset)}")
 
 
 def _train_step(
@@ -236,10 +219,10 @@ def _train_step(
 
 
 def test(
-    network: torch.nn.Module,
-    dataset: TripletDataset,
-    batch_size: int = 16,
-    num_workers: int = 8,
+        network: torch.nn.Module,
+        dataset: TripletDataset,
+        batch_size: int = 16,
+        num_workers: int = 8,
 ):
     """
     Test a network on a specific dataset.
@@ -264,4 +247,4 @@ def test(
     )
 
     print("Testing:")
-    _test_step(network, None, loader, device)
+    _test_step(network, loader, device)
