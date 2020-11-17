@@ -57,6 +57,8 @@ class Models(Base):
         )
         print(f'Training for {self.options["<epochs>"]} epochs.')
         print(f'Start temperature {self.options["<temperature>"]}, decay {decay}.')
+        if "--no-lr-scheduler" in self.options:
+            print(f"Using MultiStep learning rate")
 
         student = functions.distill(
             student,
@@ -66,6 +68,7 @@ class Models(Base):
             batch_size=16,
             epochs=self.options["<epochs>"],
             num_workers=8,
+            no_lr_scheduler="--no-lr-scheduler" in self.options,
         )
 
         save_path = os.path.join(path.get_project_root(), "models")

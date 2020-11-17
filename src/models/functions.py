@@ -15,13 +15,14 @@ from src.data.processed import TripletDataset
 
 
 def distill(
-    student: torch.nn.Module,
-    datasets: Dict[str, TripletDataset],
-    initial_temperature: int = 10,
-    temperature_decay: str = "linear",
-    batch_size: int = 16,
-    epochs: int = 10,
-    num_workers: int = 8,
+        student: torch.nn.Module,
+        datasets: Dict[str, TripletDataset],
+        initial_temperature: int = 10,
+        temperature_decay: str = "linear",
+        batch_size: int = 16,
+        epochs: int = 10,
+        num_workers: int = 8,
+        no_lr_scheduler: bool = False,
 ) -> torch.nn.Module:
     """
     Distill a student network with the knowledge of an InceptionResnetV1 teacher.
@@ -33,6 +34,7 @@ def distill(
     :param batch_size: size of the batch for the train and test data loaders
     :param epochs: number of epochs to train
     :param num_workers: number of workers to use for each data loader
+    :param no_lr_scheduler: don't reduce the learning rate at 1/3 and 2/3 of the training
     :return: distilled student
     """
 
@@ -65,8 +67,12 @@ def distill(
         ),
     }
     optimizer = optim.Adam(student.parameters(), lr=0.001)
-    scheduler_milestones = np.linspace(0, epochs, 5, dtype=np.int)[1:-1]
-    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, scheduler_milestones)
+
+    if no_lr_scheduler:
+        scheduler = None
+    else:
+        scheduler_milestones = np.linspace(0, epochs, 5, dtype=np.int)[1:-1]
+        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, scheduler_milestones)
 
     classes = [
         os.path.basename(folder)
@@ -97,7 +103,9 @@ def distill(
             epoch,
             device,
         )
-        scheduler.step()
+
+        if scheduler:
+            scheduler.step()
 
         print("Testing:")
         _test_step(student, loaders["test"], device)
