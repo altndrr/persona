@@ -4,6 +4,7 @@ main
 Usage:
     main models distill <model_name> --train-set <train_set_id> --test-set <test_set_id> \
 -e <epochs> -t <temperature> [--decay <decay_type>] [--no-lr-scheduler]
+    main models list
     main models test (--id <model_id> | teacher) --test-set <test_set_id>
     main triplets list
     main triplets make -n <number> -p <processes> <dataset> [<split>]

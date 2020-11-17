@@ -16,6 +16,8 @@ class Models(Base):
     def run(self):
         if self.options["distill"]:
             self.model_distill()
+        elif self.options["list"]:
+            self.models_list()
         elif self.options["test"]:
             self.model_test()
 
@@ -76,6 +78,14 @@ class Models(Base):
         filename = os.path.join(save_path, basename)
         print(f"Saved model to {filename}")
         torch.save(student, filename)
+
+    def models_list(self):
+        """List the generated models"""
+        models_path = os.path.join(path.get_project_root(), "models")
+        triplet_files = glob(os.path.join(models_path, "*.pth"))
+        print_text = "\n - " + "\n - ".join(triplet_files)
+
+        print(f"Triplets list: {print_text}")
 
     def model_test(self):
         """Test a model's performance on a dataset"""
