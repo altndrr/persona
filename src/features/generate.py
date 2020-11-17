@@ -119,5 +119,5 @@ def triplets(dataset: Raw, n_triplets: int, n_processes: int):
     basename = f"{n_files}_{dataset.get_name()}_{n_triplets}.npy"
     filename = os.path.join(save_path, basename)
 
-    print(f"Saving triplets to {filename}...")
+    print(f"Saved triplets to {filename}")
     np.save(filename, triplet_list)

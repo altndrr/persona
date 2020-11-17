@@ -15,14 +15,14 @@ from src.models import nn
 
 
 def distill(
-        student: torch.nn.Module,
-        datasets: Dict[str, TripletDataset],
-        initial_temperature: int = 10,
-        temperature_decay: str = "linear",
-        batch_size: int = 16,
-        epochs: int = 10,
-        num_workers: int = 8,
-        no_lr_scheduler: bool = False,
+    student: torch.nn.Module,
+    datasets: Dict[str, TripletDataset],
+    initial_temperature: int = 10,
+    temperature_decay: str = "linear",
+    batch_size: int = 16,
+    epochs: int = 10,
+    num_workers: int = 8,
+    no_lr_scheduler: bool = False,
 ) -> torch.nn.Module:
     """
     Distill a student network with the knowledge of an InceptionResnetV1 teacher.
@@ -80,7 +80,7 @@ def distill(
     ]
 
     def get_temperatures(start_temperature, size, decay):
-        assert decay in ["constant", "linear", "quadratic"]
+        assert decay in ["constant", "linear"]
 
         if decay == "constant":
             return (np.ones(size) * start_temperature).tolist()
@@ -113,6 +113,37 @@ def distill(
     return student
 
 
+def test(
+    network: torch.nn.Module,
+    dataset: TripletDataset,
+    batch_size: int = 16,
+    num_workers: int = 8,
+):
+    """
+    Test a network on a specific dataset.
+
+    :param network: neural network to test
+    :param dataset: dictionary containing the train and test datasets
+    :param batch_size: size of the batch for the train and test data loaders
+    :param num_workers: number of workers to use for each data loader
+    :return:
+    """
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    network.to(device)
+    network.eval()
+
+    loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        collate_fn=TripletDataset.collate_fn,
+        num_workers=num_workers,
+    )
+
+    _test_step(network, loader, device)
+
+
 def _test_step(model, loader, device):
     model.eval()
 
@@ -126,7 +157,7 @@ def _test_step(model, loader, device):
 
         # Evaluate match accuracy.
         for i in range(0, len(inputs), 3):
-            triplet = outputs[i: i + 3]
+            triplet = outputs[i : i + 3]
             distance = [
                 (triplet[0] - triplet[1]).norm().item(),
                 (triplet[0] - triplet[2]).norm().item(),
@@ -224,35 +255,3 @@ def _train_step(
             running_hard_loss = 0.0
 
         count += 1
-
-
-def test(
-        network: torch.nn.Module,
-        dataset: TripletDataset,
-        batch_size: int = 16,
-        num_workers: int = 8,
-):
-    """
-    Test a network on a specific dataset.
-
-    :param network: neural network to test
-    :param dataset: dictionary containing the train and test datasets
-    :param batch_size: size of the batch for the train and test data loaders
-    :param num_workers: number of workers to use for each data loader
-    :return:
-    """
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    network.to(device)
-    network.eval()
-
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=batch_size,
-        collate_fn=TripletDataset.collate_fn,
-        num_workers=num_workers,
-    )
-
-    print("Testing:")
-    _test_step(network, loader, device)

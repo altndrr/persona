@@ -3,7 +3,6 @@ import os
 from glob import glob
 
 import torch
-from facenet_pytorch import InceptionResnetV1
 
 from src.data import processed
 from src.models import functions, nn
@@ -51,10 +50,9 @@ class Models(Base):
             "test": processed.TripletDataset(self.options["<test_set_id>"]),
         }
 
-        print(f'Distilling model {self.options["<model_name>"]}.')
-        print(
-            f'Training on {len(datasets["train"])} triplets, testing on {len(datasets["test"])}.'
-        )
+        print(f"Distilling model {type(student).__name__}.")
+        print(f'Train set composed of {len(datasets["train"])} triplets.')
+        print(f'Test set composed of {len(datasets["test"])} triplets.')
         print(f'Training for {self.options["<epochs>"]} epochs.')
         print(f'Start temperature {self.options["<temperature>"]}, decay {decay}.')
         if "--no-lr-scheduler" in self.options:
@@ -73,10 +71,11 @@ class Models(Base):
 
         save_path = os.path.join(path.get_project_root(), "models")
         n_files = str(len(glob(os.path.join(save_path, "*.pth")))).zfill(2)
-        basename = f"{n_files}_{self.options['<model_name>']}_{str(self.options['<epochs>']).zfill(3)}.pth"
+        epochs_to_string = str(self.options["<epochs>"]).zfill(3)
+        basename = f"{n_files}_{self.options['<model_name>']}_{epochs_to_string}.pth"
         filename = os.path.join(save_path, basename)
-        print(f"Saving model to {filename}...")
-        torch.save(student.state_dict(), filename)
+        print(f"Saved model to {filename}")
+        torch.save(student, filename)
 
     def model_test(self):
         """Test a model's performance on a dataset"""
@@ -103,8 +102,7 @@ class Models(Base):
 
         dataset = processed.TripletDataset(self.options["<test_set_id>"])
 
-        print(
-            f'Testing model {self.options["<model_name>"]} on {len(dataset)} triplets.'
-        )
+        print(f"Testing model {type(model).__name__}.")
+        print(f"Test set composed of {len(dataset)} triplets.")
 
         functions.test(model, dataset)
