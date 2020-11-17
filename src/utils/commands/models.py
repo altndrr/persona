@@ -84,7 +84,7 @@ class Models(Base):
         model = None
 
         if self.options["teacher"]:
-            model = InceptionResnetV1(pretrained="vggface2", classify=True)
+            model = nn.teacher()
         elif self.options["<model_id>"]:
             model_path = os.path.join(path.get_project_root(), "models")
             model_files = glob(os.path.join(model_path, "*.pth"))

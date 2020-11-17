@@ -7,11 +7,11 @@ from typing import Dict
 import numpy as np
 import torch
 import torch.utils.data
-from facenet_pytorch import InceptionResnetV1
 from torch import optim
 from torch.nn import functional
 
 from src.data.processed import TripletDataset
+from src.models import nn
 
 
 def distill(
@@ -48,7 +48,7 @@ def distill(
     student.to(device)
     student.train()
 
-    teacher = InceptionResnetV1(pretrained="vggface2", classify=True)
+    teacher = nn.teacher()
     teacher.to(device)
     teacher.eval()
 

@@ -2,9 +2,10 @@
 
 import torch
 import torchvision.models
+from facenet_pytorch import InceptionResnetV1
 
 
-def mobilenet_v2():
+def mobilenet_v2() -> torch.nn.Module:
     student = torchvision.models.mobilenet_v2(pretrained=False)
 
     student.classifier = torch.nn.Sequential(
@@ -19,3 +20,7 @@ def mobilenet_v2():
     )
 
     return student
+
+
+def teacher() -> torch.nn.Module:
+    return InceptionResnetV1(pretrained="vggface2", classify=True)
