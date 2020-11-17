@@ -22,7 +22,7 @@ def distill(
     batch_size: int = 16,
     epochs: int = 10,
     num_workers: int = 8,
-):
+) -> torch.nn.Module:
     """
     Distill a student network with the knowledge of an InceptionResnetV1 teacher.
 
@@ -33,7 +33,7 @@ def distill(
     :param batch_size: size of the batch for the train and test data loaders
     :param epochs: number of epochs to train
     :param num_workers: number of workers to use for each data loader
-    :return:
+    :return: distilled student
     """
 
     if datasets["train"].get_name() != "vggface2_train":
@@ -101,6 +101,8 @@ def distill(
 
         print("Testing:")
         _test_step(student, teacher, loaders["test"], device)
+
+    return student
 
 
 def _test_step(student, teacher, loader, device):
