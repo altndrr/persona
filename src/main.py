@@ -2,9 +2,9 @@
 main
 
 Usage:
-    main model distill <model_name> --train-set <train_set_id> --test-set <test_set_id> \
-                                    -e <epochs> -t <temperature> [--decay <decay_type>]
-    main model test <model_name> --test-set <test_set_id>
+    main models distill <model_name> --train-set <train_set_id> --test-set <test_set_id> \
+-e <epochs> -t <temperature> [--decay <decay_type>] [--no-lr-scheduler]
+    main models test <model_name> --test-set <test_set_id>
     main triplets list
     main triplets make -n <number> -p <processes> <dataset> [<split>]
     main -h | --help

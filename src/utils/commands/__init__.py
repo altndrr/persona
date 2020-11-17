@@ -1,5 +1,5 @@
 """Init module"""
 
 from .base import Base
-from .model import Model
+from .models import Models
 from .triplets import Triplets

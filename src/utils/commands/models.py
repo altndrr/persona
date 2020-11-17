@@ -11,7 +11,7 @@ from src.utils import path
 from src.utils.commands import Base
 
 
-class Model(Base):
+class Models(Base):
     """Model command class"""
 
     def run(self):
