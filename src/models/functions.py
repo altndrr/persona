@@ -114,7 +114,9 @@ def _test_step(student, teacher, loader, device):
         inputs = inputs.to(device)
 
         student_outputs = student(inputs)
-        teacher_outputs = teacher(inputs)
+
+        if teacher:
+            teacher_outputs = teacher(inputs)
 
         # Evaluate match_accuracy.
         for i in range(0, len(inputs), 3):
@@ -126,16 +128,20 @@ def _test_step(student, teacher, loader, device):
             if student_match_distance[0] < student_match_distance[1]:
                 student_match_accuracy += 1
 
-            triplet = teacher_outputs[i : i + 3]
-            teacher_match_distance = [
-                (triplet[0] - triplet[1]).norm().item(),
-                (triplet[0] - triplet[2]).norm().item(),
-            ]
-            if teacher_match_distance[0] < teacher_match_distance[1]:
-                teacher_match_accuracy += 1
+            if teacher:
+                triplet = teacher_outputs[i : i + 3]
+                teacher_match_distance = [
+                    (triplet[0] - triplet[1]).norm().item(),
+                    (triplet[0] - triplet[2]).norm().item(),
+                ]
+                if teacher_match_distance[0] < teacher_match_distance[1]:
+                    teacher_match_accuracy += 1
 
     print(f" - Student match accuracy: {student_match_accuracy / len(loader.dataset)}")
-    print(f" - Teacher match accuracy: {teacher_match_accuracy / len(loader.dataset)}")
+    if teacher:
+        print(
+            f" - Teacher match accuracy: {teacher_match_accuracy / len(loader.dataset)}"
+        )
 
 
 def _train_step(
@@ -225,3 +231,35 @@ def _train_step(
             running_hard_loss = 0.0
 
         count += 1
+
+
+def test(
+    network: torch.nn.Module,
+    dataset: TripletDataset,
+    batch_size: int = 16,
+    num_workers: int = 8,
+):
+    """
+    Test a network on a specific dataset.
+
+    :param network: neural network to test
+    :param dataset: dictionary containing the train and test datasets
+    :param batch_size: size of the batch for the train and test data loaders
+    :param num_workers: number of workers to use for each data loader
+    :return:
+    """
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    network.to(device)
+    network.eval()
+
+    loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        collate_fn=TripletDataset.collate_fn,
+        num_workers=num_workers,
+    )
+
+    print("Testing:")
+    _test_step(network, None, loader, device)
