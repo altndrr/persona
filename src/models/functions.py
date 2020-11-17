@@ -1,4 +1,4 @@
-"""Collection of functions to distill knowledge from facenet to a student"""
+"""Collection of functions to apply on neural networks"""
 
 import os
 from glob import glob
