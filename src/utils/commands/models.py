@@ -79,9 +79,25 @@ class Models(Base):
         torch.save(student.state_dict(), filename)
 
     def model_test(self):
-        """Test a model's perfomance on a dataset"""
-        if self.options["<model_name>"] == "teacher":
+        """Test a model's performance on a dataset"""
+
+        model = None
+
+        if self.options["teacher"]:
             model = InceptionResnetV1(pretrained="vggface2", classify=True)
+        elif self.options["<model_id>"]:
+            model_path = os.path.join(path.get_project_root(), "models")
+            model_files = glob(os.path.join(model_path, "*.pth"))
+
+            model_file_id = str(self.options["<model_id>"]).zfill(2)
+
+            for file in model_files:
+                if os.path.basename(file).startswith(model_file_id):
+                    model = torch.load(file)
+                    break
+
+            if model is None:
+                raise ValueError(f"{self.options['<model_id >']} is an invalid file id")
         else:
             raise ValueError(f'{self.options["<model_name>"]} is an invalid student')
 
