@@ -1,29 +1,24 @@
 """Collection of functions to apply on neural networks"""
 
-import os
-from glob import glob
 from typing import Dict
 
-import numpy as np
 import torch
 import torch.utils.data
-from torch import optim
-from torch.nn import functional
 
-from src.data.processed import TripletDataset
+from src.data import processed
 from src.models import nn
-from src.utils import path
+from src.utils import data, models
 
 
 def distill(
-    student: torch.nn.Module,
-    datasets: Dict[str, TripletDataset],
-    initial_temperature: int = 10,
-    temperature_decay: str = "linear",
-    batch_size: int = 16,
-    epochs: int = 10,
-    num_workers: int = 8,
-    no_lr_scheduler: bool = False,
+        student: torch.nn.Module,
+        datasets: Dict[str, processed.TripletDataset],
+        initial_temperature: int = 10,
+        temperature_decay: str = "linear",
+        batch_size: int = 16,
+        epochs: int = 10,
+        num_workers: int = 8,
+        no_lr_scheduler: bool = False,
 ) -> torch.nn.Module:
     """
     Distill a student network with the knowledge of an InceptionResnetV1 teacher.
@@ -45,85 +40,58 @@ def distill(
         )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    classes = data.get_vggface2_classes("train")
+    temperatures = models.get_distillation_temperatures(
+        initial_temperature, epochs, temperature_decay
+    )
 
-    student.to(device)
-    student.train()
+    student = student.train().to(device)
+    teacher = nn.teacher().eval().to(device)
 
-    teacher = nn.teacher()
-    teacher.to(device)
-    teacher.eval()
+    train_loader = data.get_triplet_dataloader(
+        datasets["train"], batch_size, num_workers
+    )
+    test_loader = data.get_triplet_dataloader(datasets["test"], batch_size, num_workers)
 
-    loaders = {
-        "train": torch.utils.data.DataLoader(
-            datasets["train"],
-            batch_size=batch_size,
-            collate_fn=TripletDataset.collate_fn,
-            num_workers=num_workers,
-        ),
-        "test": torch.utils.data.DataLoader(
-            datasets["test"],
-            batch_size=batch_size,
-            collate_fn=TripletDataset.collate_fn,
-            num_workers=num_workers,
-        ),
-    }
-    optimizer = optim.Adam(student.parameters(), lr=0.001)
-
-    if no_lr_scheduler:
-        scheduler = None
-    else:
-        scheduler_milestones = np.linspace(0, epochs, 5, dtype=np.int)[1:-1]
-        scheduler = optim.lr_scheduler.MultiStepLR(optimizer, scheduler_milestones)
-
-    classes = [
-        os.path.basename(folder)
-        for folder in glob(
-            os.path.join(
-                path.get_project_root(), "data", "raw", "vggface2", "train", "*"
-            )
-        )
-    ]
-
-    def get_temperatures(start_temperature, size, decay):
-        assert decay in ["constant", "linear"]
-
-        if decay == "constant":
-            return (np.ones(size) * start_temperature).tolist()
-        elif decay == "linear":
-            return np.linspace(start_temperature, 1.0, size).tolist()
-
-    temperatures = get_temperatures(initial_temperature, epochs, temperature_decay)
+    optimizer = torch.optim.Adam(student.parameters(), lr=0.001)
+    scheduler = (
+        None
+        if no_lr_scheduler
+        else models.get_distillation_lr_scheduler(epochs, optimizer)
+    )
 
     for epoch in range(epochs):
-        print(f"\nEpoch {epoch + 1}, temperature = {temperatures[epoch]}")
+        temperature = next(temperatures)
+        print(f"\nEpoch {epoch + 1}, temperature = {temperature}")
 
         print("Training:")
-        _train_step(
+        distill_step(
             student,
             teacher,
             classes,
-            loaders["train"],
-            temperatures[epoch],
+            train_loader,
+            temperature,
             optimizer,
             epoch,
             device,
         )
 
+        print("Testing:")
+        accuracy = test_match_accuracy(student, test_loader, device)
+        print(f"Match accuracy: {accuracy}")
+
         if scheduler:
             scheduler.step()
-
-        print("Testing:")
-        _test_step(student, loaders["test"], "match", device)
 
     return student
 
 
 def test(
-    network: torch.nn.Module,
-    dataset: TripletDataset,
-    measure: str,
-    batch_size: int = 16,
-    num_workers: int = 8,
+        network: torch.nn.Module,
+        dataset: processed.TripletDataset,
+        measure: str,
+        batch_size: int = 16,
+        num_workers: int = 8,
 ):
     """
     Test a network on a specific dataset.
@@ -135,32 +103,72 @@ def test(
     :param num_workers: number of workers to use for each data loader
     :return:
     """
+    if measure not in ["class", "match"]:
+        raise ValueError(f"{measure} is an invalid test measure")
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    network.to(device)
-    network.eval()
+    network = network.eval().to(device)
 
-    loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size=batch_size,
-        collate_fn=TripletDataset.collate_fn,
-        num_workers=num_workers,
-    )
-
-    _test_step(network, loader, measure, device)
-
-
-def _test_step(model, loader, measure, device):
-    if measure not in ["class", "match"]:
-        raise ValueError(f"{measure} is an invalid test measure")
+    loader = data.get_triplet_dataloader(dataset, batch_size, num_workers)
 
     if measure == "class" and loader.dataset.get_name() != "vggface2_train":
         raise ValueError(
             f"class accuracy can only me measured on a vggface2 train dataset"
         )
 
-    model.eval()
+    accuracy = 0
+    if measure == "class":
+        accuracy = test_class_accuracy(network, loader, device)
+    elif measure == "match":
+        accuracy = test_match_accuracy(network, loader, device)
+
+    print(f"{measure.title()} accuracy: {accuracy}")
+
+
+def test_class_accuracy(network: torch.nn, loader: torch.utils.data.DataLoader,
+                        device: torch.device) -> float:
+    """
+    Test the class accuracy of a network on a dataset.
+
+    :param network: network to test
+    :param loader: loader to test
+    :param device: device to use
+    :return: result accuracy
+    """
+    network.eval()
+
+    accuracy = 0
+    classes = data.get_vggface2_classes("train")
+
+    for _, sample in enumerate(loader):
+        inputs, labels = sample
+        inputs = inputs.to(device)
+
+        outputs = network(inputs)
+
+        # Convert the class names with the class id and transpose the tensor.
+        labels = [classes.index(label) for label in labels]
+        labels = torch.LongTensor(labels).T
+        labels = labels.to(device)
+
+        output_labels = torch.topk(outputs, 1).indices.view(-1)
+        accuracy += torch.count_nonzero(output_labels == labels)
+
+    accuracy = accuracy / (len(loader.dataset) * 3)
+    return accuracy
+
+
+def test_match_accuracy(network, loader, device) -> float:
+    """
+    Test the match accuracy of a network on a dataset.
+
+    :param network: network to test
+    :param loader: loader to test
+    :param device: device to use
+    :return: result accuracy
+    """
+    network.eval()
 
     accuracy = 0
 
@@ -168,54 +176,31 @@ def _test_step(model, loader, measure, device):
         inputs, labels = sample
         inputs = inputs.to(device)
 
-        outputs = model(inputs)
+        outputs = network(inputs)
 
-        # Evaluate the class accuracy
-        if measure == "class":
-            classes = [
-                os.path.basename(folder)
-                for folder in glob(
-                    os.path.join(
-                        path.get_project_root(), "data", "raw", "vggface2", "train", "*"
-                    )
-                )
+        for i in range(0, len(inputs), 3):
+            triplet = outputs[i: i + 3]
+            distance = [
+                (triplet[0] - triplet[1]).norm().item(),
+                (triplet[0] - triplet[2]).norm().item(),
             ]
+            if distance[0] < distance[1]:
+                accuracy += 1
 
-            # Convert the class names with the class id and transpose the tensor.
-            labels = [classes.index(label) for label in labels]
-            labels = torch.LongTensor(labels).T
-            labels = labels.to(device)
-
-            output_labels = torch.topk(outputs, 1).indices.view(-1)
-            accuracy += torch.count_nonzero(torch.Tensor(output_labels == labels))
-
-        # Evaluate match accuracy.
-        elif measure == "match":
-            for i in range(0, len(inputs), 3):
-                triplet = outputs[i : i + 3]
-                distance = [
-                    (triplet[0] - triplet[1]).norm().item(),
-                    (triplet[0] - triplet[2]).norm().item(),
-                ]
-                if distance[0] < distance[1]:
-                    accuracy += 1
-
-    if measure == "class":
-        print(f"Class accuracy: {accuracy / (len(loader.dataset) * 3)}")
-    elif measure == "match":
-        print(f"Match accuracy: {accuracy / len(loader.dataset)}")
+    accuracy /= len(loader.dataset)
+    return accuracy
 
 
-def _train_step(
-    student,
-    teacher,
-    classes,
-    loader,
-    temperature,
-    optimizer,
-    epoch,
-    device,
-    print_every=100,
+def distill_step(
+        student,
+        teacher,
+        classes,
+        loader,
+        temperature,
+        optimizer,
+        epoch,
+        device,
+        print_every=100,
 ):
     student.train()
 
@@ -245,13 +230,13 @@ def _train_step(
 
         # Evaluate the soft loss.
         for i in range(0, len(inputs), 3):
-            soft_outputs = functional.log_softmax(
-                student_outputs[i : i + 3] / temperature, dim=1
+            soft_outputs = torch.nn.functional.log_softmax(
+                student_outputs[i: i + 3] / temperature, dim=1
             )
-            soft_targets = functional.softmax(
-                teacher_outputs[i : i + 3] / temperature, dim=1
+            soft_targets = torch.nn.functional.softmax(
+                teacher_outputs[i: i + 3] / temperature, dim=1
             )
-            soft_loss += functional.kl_div(
+            soft_loss += torch.nn.functional.kl_div(
                 soft_outputs, soft_targets.detach(), reduction="batchmean"
             )
 
@@ -263,7 +248,7 @@ def _train_step(
 
         # Evaluate the hard loss.
         for i in range(0, len(inputs), 3):
-            hard_loss += functional.cross_entropy(
+            hard_loss += torch.nn.functional.cross_entropy(
                 student_outputs[i : i + 3], labels[i : i + 3]
             )
 
