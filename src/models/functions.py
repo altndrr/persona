@@ -113,7 +113,7 @@ def distill(
             scheduler.step()
 
         print("Testing:")
-        _test_step(student, loaders["test"], device)
+        _test_step(student, loaders["test"], "match", device)
 
     return student
 
@@ -121,6 +121,7 @@ def distill(
 def test(
     network: torch.nn.Module,
     dataset: TripletDataset,
+    measure: str,
     batch_size: int = 16,
     num_workers: int = 8,
 ):
@@ -130,6 +131,7 @@ def test(
     :param network: neural network to test
     :param dataset: dictionary containing the train and test datasets
     :param batch_size: size of the batch for the train and test data loaders
+    :param measure: measure to test, either class or match accuracy
     :param num_workers: number of workers to use for each data loader
     :return:
     """
@@ -146,31 +148,62 @@ def test(
         num_workers=num_workers,
     )
 
-    _test_step(network, loader, device)
+    _test_step(network, loader, measure, device)
 
 
-def _test_step(model, loader, device):
+def _test_step(model, loader, measure, device):
+    if measure not in ["class", "match"]:
+        raise ValueError(f"{measure} is an invalid test measure")
+
+    if measure == "class" and loader.dataset.get_name() != "vggface2_train":
+        raise ValueError(
+            f"class accuracy can only me measured on a vggface2 train dataset"
+        )
+
     model.eval()
 
-    match_accuracy = 0
+    accuracy = 0
 
     for _, sample in enumerate(loader):
-        inputs, _ = sample
+        inputs, labels = sample
         inputs = inputs.to(device)
 
         outputs = model(inputs)
 
-        # Evaluate match accuracy.
-        for i in range(0, len(inputs), 3):
-            triplet = outputs[i : i + 3]
-            distance = [
-                (triplet[0] - triplet[1]).norm().item(),
-                (triplet[0] - triplet[2]).norm().item(),
+        # Evaluate the class accuracy
+        if measure == "class":
+            classes = [
+                os.path.basename(folder)
+                for folder in glob(
+                    os.path.join(
+                        path.get_project_root(), "data", "raw", "vggface2", "train", "*"
+                    )
+                )
             ]
-            if distance[0] < distance[1]:
-                match_accuracy += 1
 
-    print(f"Match accuracy: {match_accuracy / len(loader.dataset)}")
+            # Convert the class names with the class id and transpose the tensor.
+            labels = [classes.index(label) for label in labels]
+            labels = torch.LongTensor(labels).T
+            labels = labels.to(device)
+
+            output_labels = torch.topk(outputs, 1).indices.view(-1)
+            accuracy += torch.count_nonzero(torch.Tensor(output_labels == labels))
+
+        # Evaluate match accuracy.
+        elif measure == "match":
+            for i in range(0, len(inputs), 3):
+                triplet = outputs[i : i + 3]
+                distance = [
+                    (triplet[0] - triplet[1]).norm().item(),
+                    (triplet[0] - triplet[2]).norm().item(),
+                ]
+                if distance[0] < distance[1]:
+                    accuracy += 1
+
+    if measure == "class":
+        print(f"Class accuracy: {accuracy / (len(loader.dataset) * 3)}")
+    elif measure == "match":
+        print(f"Match accuracy: {accuracy / len(loader.dataset)}")
 
 
 def _train_step(

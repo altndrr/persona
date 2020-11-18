@@ -110,9 +110,19 @@ class Models(Base):
         else:
             raise ValueError(f'{self.options["<model_name>"]} is an invalid student')
 
+        measure = "match"
+        if self.options["<measure_type>"]:
+            if self.options["<measure_type>"] not in ["class", "match"]:
+                raise ValueError(
+                    f"{self.options['<measure_type>']} is an invalid test measure"
+                )
+
+            measure = self.options["<measure_type>"]
+
         dataset = processed.TripletDataset(self.options["<test_set_id>"])
 
         print(f"Testing model {type(model).__name__}.")
+        print(f"Evaluating {measure} accuracy.")
         print(f"Test set composed of {len(dataset)} triplets.")
 
-        functions.test(model, dataset)
+        functions.test(model, dataset, measure)
