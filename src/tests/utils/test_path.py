@@ -33,4 +33,4 @@ def test_change_data_category():
 
 def test_get_project_path():
     """Test the get_project_path function"""
-    assert os.path.basename(path.get_project_root()) == "face-recognition"
+    assert os.path.basename(path.get_project_root()) == "persona"

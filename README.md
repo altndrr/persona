@@ -1,4 +1,4 @@
-# Face recognition
+# Persona
 
 This repository contains the code and the results achieved during the time of my research project.
 
@@ -18,7 +18,7 @@ on the system.
 #### Clone this repository
 
 ```
-git clone https://github.com/altndrr/face-recognition.git
+git clone https://github.com/altndrr/persona.git
 ```
 
 #### Create the environment
@@ -91,6 +91,33 @@ By typing the following line of code, it is possible to run the main module.
 python -m src
 ```
 As for the manage script, doing so with no option will display the `help` document.
+```
+Usage:
+    main models distill <model_name> --train-set=<ID> --test-set=<ID> -e <NUM> -t <VAL> [--decay=<TYPE>] [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
+    main models list
+    main models test (--student=<ID> | --teacher) --test-set=<ID> [--measure=<VAL>] [-b SIZE] [-w NUM]
+    main triplets list
+    main triplets make <num_triplets> <dataset> [--split=<VAL>] [-w <NUM>]
+    main -h | --help
+    main --version
+
+Options:
+    -b SIZE --batch=<SIZE>      Batch size [default: 16].
+    -e NUM --epochs=<NUM>       Number of epochs to train.
+    -t NUM --temperature=<NUM>  Initial temperature for distillation.
+    -w NUM --workers=<NUM>      Number of workers [default: 8].
+    --decay=<TYPE>              Type of temperature decay [default: linear].
+    --lr=<VAL>                  Learning rate for training [default: 0.001].
+    --measure=<VAL>             Test measure to use, either class or match [default: match].
+    --no-lr-scheduler           Don't use a learning rate scheduler.
+    --split=<VAL>               Split of the dataset, either train or test.
+    --student=<ID>              ID of the student network.
+    --train-set=<ID>            ID of the training set.
+    --test-set=<ID>             ID of the testing set.
+    -h --help                   Show this screen.
+    --version                   Show version.
+
+```
 
 ## Structure
 
