@@ -11,14 +11,14 @@ from src.utils import data, models
 
 
 def distill(
-        student: torch.nn.Module,
-        datasets: Dict[str, processed.TripletDataset],
-        initial_temperature: int = 10,
-        temperature_decay: str = "linear",
-        batch_size: int = 16,
-        epochs: int = 10,
-        num_workers: int = 8,
-        no_lr_scheduler: bool = False,
+    student: torch.nn.Module,
+    datasets: Dict[str, processed.TripletDataset],
+    initial_temperature: int = 10,
+    temperature_decay: str = "linear",
+    batch_size: int = 16,
+    epochs: int = 10,
+    num_workers: int = 8,
+    no_lr_scheduler: bool = False,
 ) -> torch.nn.Module:
     """
     Distill a student network with the knowledge of an InceptionResnetV1 teacher.
@@ -87,11 +87,11 @@ def distill(
 
 
 def test(
-        network: torch.nn.Module,
-        dataset: processed.TripletDataset,
-        measure: str,
-        batch_size: int = 16,
-        num_workers: int = 8,
+    network: torch.nn.Module,
+    dataset: processed.TripletDataset,
+    measure: str,
+    batch_size: int = 16,
+    num_workers: int = 8,
 ):
     """
     Test a network on a specific dataset.
@@ -126,8 +126,9 @@ def test(
     print(f"{measure.title()} accuracy: {accuracy}")
 
 
-def test_class_accuracy(network: torch.nn, loader: torch.utils.data.DataLoader,
-                        device: torch.device) -> float:
+def test_class_accuracy(
+    network: torch.nn, loader: torch.utils.data.DataLoader, device: torch.device
+) -> float:
     """
     Test the class accuracy of a network on a dataset.
 
@@ -172,14 +173,13 @@ def test_match_accuracy(network, loader, device) -> float:
 
     accuracy = 0
 
-    for _, sample in enumerate(loader):
-        inputs, labels = sample
+    for _, (inputs, labels) in enumerate(loader):
         inputs = inputs.to(device)
 
         outputs = network(inputs)
 
         for i in range(0, len(inputs), 3):
-            triplet = outputs[i: i + 3]
+            triplet = outputs[i : i + 3]
             distance = [
                 (triplet[0] - triplet[1]).norm().item(),
                 (triplet[0] - triplet[2]).norm().item(),
@@ -192,16 +192,30 @@ def test_match_accuracy(network, loader, device) -> float:
 
 
 def distill_step(
-        student,
-        teacher,
-        classes,
-        loader,
-        temperature,
-        optimizer,
-        epoch,
-        device,
-        print_every=100,
+    student,
+    teacher,
+    classes,
+    loader,
+    temperature,
+    optimizer,
+    epoch,
+    device,
+    print_every=100,
 ):
+    """
+    Perform a single step of distillation.
+
+    :param student: student network
+    :param teacher: teacher network
+    :param classes: classes of the dataset
+    :param loader: loader used for training
+    :param temperature: current temperature of distillation
+    :param optimizer: optimizer to use
+    :param epoch: current epoch
+    :param device: device to use
+    :param print_every: print a progress statement every defined number of batches
+    :return:
+    """
     student.train()
 
     running_loss = 0.0
@@ -209,12 +223,7 @@ def distill_step(
     running_hard_loss = 0.0
 
     count = 0
-    for _, sample in enumerate(loader):
-        soft_loss = 0
-        hard_loss = 0
-
-        inputs, labels = sample
-
+    for _, (inputs, labels) in enumerate(loader):
         n_triplets = len(inputs) / 3
 
         # Convert the class names with the class id and transpose the tensor.
@@ -232,10 +241,10 @@ def distill_step(
         soft_loss = 0
         for i in range(0, len(inputs), 3):
             soft_outputs = torch.nn.functional.log_softmax(
-                student_outputs[i: i + 3] / temperature, dim=1
+                student_outputs[i : i + 3] / temperature, dim=1
             )
             soft_targets = torch.nn.functional.softmax(
-                teacher_outputs[i: i + 3] / temperature, dim=1
+                teacher_outputs[i : i + 3] / temperature, dim=1
             )
             soft_loss += torch.nn.functional.kl_div(
                 soft_outputs, soft_targets.detach(), reduction="batchmean"
