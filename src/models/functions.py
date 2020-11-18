@@ -12,6 +12,7 @@ from torch.nn import functional
 
 from src.data.processed import TripletDataset
 from src.models import nn
+from src.utils import path
 
 
 def distill(
@@ -76,7 +77,11 @@ def distill(
 
     classes = [
         os.path.basename(folder)
-        for folder in glob(os.path.join("data", "raw", "vggface2", "train", "*"))
+        for folder in glob(
+            os.path.join(
+                path.get_project_root(), "data", "raw", "vggface2", "train", "*"
+            )
+        )
     ]
 
     def get_temperatures(start_temperature, size, decay):

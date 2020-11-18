@@ -57,7 +57,7 @@ class Models(Base):
         print(f'Test set composed of {len(datasets["test"])} triplets.')
         print(f'Training for {self.options["<epochs>"]} epochs.')
         print(f'Start temperature {self.options["<temperature>"]}, decay {decay}.')
-        if "--no-lr-scheduler" in self.options:
+        if "--no-lr-scheduler" not in self.options:
             print(f"Using MultiStep learning rate")
 
         student = functions.distill(
