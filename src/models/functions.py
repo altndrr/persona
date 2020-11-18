@@ -17,6 +17,7 @@ def distill(
     temperature_decay: str = "linear",
     batch_size: int = 16,
     epochs: int = 10,
+    lr: float = 0.001,
     num_workers: int = 8,
     no_lr_scheduler: bool = False,
 ) -> torch.nn.Module:
@@ -29,6 +30,7 @@ def distill(
     :param temperature_decay: either constant or linear, defines how temperature changes over time
     :param batch_size: size of the batch for the train and test data loaders
     :param epochs: number of epochs to train
+    :param lr: learning rate of the network
     :param num_workers: number of workers to use for each data loader
     :param no_lr_scheduler: don't reduce the learning rate at 1/3 and 2/3 of the training
     :return: distilled student
@@ -53,7 +55,7 @@ def distill(
     )
     test_loader = data.get_triplet_dataloader(datasets["test"], batch_size, num_workers)
 
-    optimizer = torch.optim.Adam(student.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(student.parameters(), lr=lr)
     scheduler = (
         None
         if no_lr_scheduler

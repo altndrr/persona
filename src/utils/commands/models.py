@@ -23,57 +23,46 @@ class Models(Base):
 
     def model_distill(self):
         """Distill a model with the knowledge of a teacher"""
-        try:
-            self.options["<train_set_id>"] = int(self.options["<train_set_id>"])
-            self.options["<test_set_id>"] = int(self.options["<test_set_id>"])
-            self.options["<epochs>"] = int(self.options["<epochs>"])
-            self.options["<temperature>"] = int(self.options["<temperature>"])
-        except ValueError as value_error:
-            raise value_error
-
-        decay = "constant"
-        if self.options["--decay"]:
-            if self.options["<decay_type>"] not in ["constant", "linear"]:
-                raise ValueError(
-                    f'{self.options["<decay_type>"]} is an invalid decay type.'
-                    f"Select between `constant` or `linear`"
-                )
-            decay = self.options["<decay_type>"]
-
+        student = None
         if self.options["<model_name>"] == "mobilenet_v2":
             student = nn.mobilenet_v2()
-        else:
-            raise ValueError(f'{self.options["<model_name>"]} is an invalid student')
 
         datasets = {
             "train": processed.TripletDataset(
-                self.options["<train_set_id>"], transforms=True
+                self.options["--train-set"], transforms=True
             ),
-            "test": processed.TripletDataset(self.options["<test_set_id>"]),
+            "test": processed.TripletDataset(self.options["--test-set"]),
         }
 
         print(f"Distilling model {type(student).__name__}.")
         print(f'Train set composed of {len(datasets["train"])} triplets.')
         print(f'Test set composed of {len(datasets["test"])} triplets.')
-        print(f'Training for {self.options["<epochs>"]} epochs.')
-        print(f'Start temperature {self.options["<temperature>"]}, decay {decay}.')
-        if "--no-lr-scheduler" not in self.options:
-            print(f"Using MultiStep learning rate")
+        print(f'Training for {self.options["--epochs"]} epochs.')
+        print(
+            f'Start temperature {self.options["--temperature"]}, '
+            f'decay {self.options["--decay"]}.'
+        )
+        print(f'Training with {self.options["--lr"]} learning rate.')
+        if not self.options["--no-lr-scheduler"]:
+            print(f"Using MultiStep learning rate.")
+        print(f'Using a batch size of {self.options["--batch"]}.')
+        print(f'Using {self.options["--workers"]} workers.')
 
         student = functions.distill(
             student,
             datasets,
-            initial_temperature=self.options["<temperature>"],
-            temperature_decay=decay,
-            batch_size=16,
-            epochs=self.options["<epochs>"],
-            num_workers=8,
+            initial_temperature=self.options["--temperature"],
+            temperature_decay=self.options["--decay"],
+            batch_size=self.options["--batch"],
+            epochs=self.options["--epochs"],
+            lr=self.options["--lr"],
+            num_workers=self.options["--workers"],
             no_lr_scheduler="--no-lr-scheduler" in self.options,
         )
 
         save_path = os.path.join(path.get_project_root(), "models")
         n_files = str(len(glob(os.path.join(save_path, "*.pth")))).zfill(2)
-        epochs_to_string = str(self.options["<epochs>"]).zfill(3)
+        epochs_to_string = str(self.options["--epochs"]).zfill(3)
         basename = f"{n_files}_{self.options['<model_name>']}_{epochs_to_string}.pth"
         filename = os.path.join(save_path, basename)
         print(f"Saved model to {filename}")
@@ -89,16 +78,15 @@ class Models(Base):
 
     def model_test(self):
         """Test a model's performance on a dataset"""
-
         model = None
 
-        if self.options["teacher"]:
+        if self.options["--teacher"]:
             model = nn.teacher()
-        elif self.options["<model_id>"]:
+        elif self.options["--student"]:
             model_path = os.path.join(path.get_project_root(), "models")
             model_files = glob(os.path.join(model_path, "*.pth"))
 
-            model_file_id = str(self.options["<model_id>"]).zfill(2)
+            model_file_id = str(self.options["--student"]).zfill(2)
 
             for file in model_files:
                 if os.path.basename(file).startswith(model_file_id):
@@ -107,22 +95,19 @@ class Models(Base):
 
             if model is None:
                 raise ValueError(f"{self.options['<model_id >']} is an invalid file id")
-        else:
-            raise ValueError(f'{self.options["<model_name>"]} is an invalid student')
 
-        measure = "match"
-        if self.options["<measure_type>"]:
-            if self.options["<measure_type>"] not in ["class", "match"]:
-                raise ValueError(
-                    f"{self.options['<measure_type>']} is an invalid test measure"
-                )
-
-            measure = self.options["<measure_type>"]
-
-        dataset = processed.TripletDataset(self.options["<test_set_id>"])
+        dataset = processed.TripletDataset(self.options["--test-set"])
 
         print(f"Testing model {type(model).__name__}.")
-        print(f"Evaluating {measure} accuracy.")
+        print(f"Evaluating {self.options['--measure']} accuracy.")
         print(f"Test set composed of {len(dataset)} triplets.")
+        print(f'Using a batch size of {self.options["--batch"]}.')
+        print(f'Using {self.options["--workers"]} workers.')
 
-        functions.test(model, dataset, measure)
+        functions.test(
+            model,
+            dataset,
+            self.options["--measure"],
+            batch_size=self.options["--batch"],
+            num_workers=self.options["--workers"],
+        )

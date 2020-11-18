@@ -29,20 +29,9 @@ class Triplets(Base):
 
     def triplets_make(self):
         """Make a new triplet file"""
-        try:
-            self.options["<number>"] = int(self.options["<number>"])
-            self.options["<processes>"] = int(self.options["<processes>"])
-        except ValueError as value_error:
-            raise value_error
-
-        if self.options["<processes>"] == 0:
-            self.options["<processes>"] = os.cpu_count()
-
         if self.options["<dataset>"] == "agedb":
             dataset = raw.AgeDB()
-        elif self.options["<dataset>"] == "vggface2" and self.options["<split>"]:
-            dataset = raw.VGGFace2(self.options["<split>"])
-        else:
-            raise ValueError()
+        elif self.options["<dataset>"] == "vggface2" and self.options["--split"]:
+            dataset = raw.VGGFace2(self.options["--split"])
 
-        triplets(dataset, self.options["<number>"], self.options["<processes>"])
+        triplets(dataset, self.options["<num_triplets>"], self.options["--workers"])
