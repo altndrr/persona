@@ -1,6 +1,6 @@
 # Persona
 
-This repository contains the code and the results achieved during the time of my research project.
+This repository contains the code and the results of my research project in deep learning.
 
 ## Purpose
 
@@ -81,8 +81,9 @@ python manage.py
 Doing so with no option will display the `help` document.
 
 Some examples of usage are:
-1. `python manage.py code --lint`: perform static analysis of the code.
-2. `python manage.py code --test`: run parallel tests with coverage.
+1. `python manage.py code --format`: format code according to `.pylintrc`.
+2. `python manage.py code --lint`: perform static analysis of the code.
+3. `python manage.py code --test`: run parallel tests with coverage.
 
 ### Source module
 
@@ -129,8 +130,8 @@ The repository is structured in five main folders:
 5. `src`: carries all of the source code.
 
 Five main modules compose the source code:
-1. `data`: has all of the methods to transform and process the data.
-2. `features`: comprehends all that is needed to manipulate the data and make them machine-consumable.
+1. `data`: has all the classes and the functions needed to work with data and datasets.
+2. `features`: comprehends the methods to transform and process the data.
 3. `models`: holds all of the code used to build and train models.
 4. `tests`: includes the tests on the source code.
 5. `visualization`: contains the methods used for image and video visualization.
