@@ -229,6 +229,7 @@ def distill_step(
         teacher_outputs = teacher(inputs)
 
         # Evaluate the soft loss.
+        soft_loss = 0
         for i in range(0, len(inputs), 3):
             soft_outputs = torch.nn.functional.log_softmax(
                 student_outputs[i: i + 3] / temperature, dim=1
@@ -247,10 +248,7 @@ def distill_step(
         soft_loss *= temperature ** 2
 
         # Evaluate the hard loss.
-        for i in range(0, len(inputs), 3):
-            hard_loss += torch.nn.functional.cross_entropy(
-                student_outputs[i : i + 3], labels[i : i + 3]
-            )
+        hard_loss = torch.nn.functional.cross_entropy(student_outputs, labels)
 
         # Evaluate the weighted average loss.
         loss = soft_loss + hard_loss
