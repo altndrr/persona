@@ -2,7 +2,7 @@
 import os
 from glob import glob
 
-from src.data import raw
+from src.data import processed, raw
 from src.features.generate import triplets
 from src.utils import path
 from src.utils.commands import Base
@@ -12,10 +12,44 @@ class Triplets(Base):
     """Triplets command class"""
 
     def run(self):
-        if self.options["list"]:
+        if self.options["coverage"]:
+            self.triplets_coverage()
+        elif self.options["list"]:
             self.triplets_list()
         elif self.options["make"]:
             self.triplets_make()
+
+    def triplets_coverage(self):
+        """Evaluate the coverage of a triplet set"""
+        print(f"Testing triplets coverage.")
+
+        triplet_dataset = processed.TripletDataset(self.options["--set"])
+        print(f"Test set composed of {len(triplet_dataset)} triplets.")
+
+        total_classes = []
+        total_paths = []
+        for i in range(len(triplet_dataset)):
+            paths, classes = triplet_dataset.get_triplet(i)
+            total_classes.extend(classes)
+            total_paths.extend(paths)
+        total_classes = list(set(total_classes))
+        total_paths = list(set(total_paths))
+        print(f"Test set composed of {len(total_classes)} unique classes.")
+        print(f"Test set composed of {len(total_paths)} unique images.")
+
+        original_dataset = None
+        if triplet_dataset.get_name() == "agedb":
+            original_dataset = raw.AgeDB()
+        elif triplet_dataset.get_name() == "lfw":
+            original_dataset = raw.LFW()
+        elif triplet_dataset.get_name() == "vggface2_test":
+            original_dataset = raw.VGGFace2("test")
+        elif triplet_dataset.get_name() == "vggface2_train":
+            original_dataset = raw.VGGFace2("train")
+        print(f"Raw dataset composed of {len(original_dataset)} unique images.")
+
+        image_coverage = len(total_paths) / len(original_dataset)
+        print(f"Image coverage of {image_coverage}.")
 
     def triplets_list(self):
         """List the generated triplets"""

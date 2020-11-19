@@ -45,6 +45,16 @@ class TripletDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self._triplets)
 
+    def get_triplet(self, idx: int) -> Tuple[List[str], List[str]]:
+        """
+        Get paths and classes of a triplet instead of tensors and classes.
+
+        :param idx: id of the triplet.
+        """
+        paths, classes = self._triplets[idx][:3], self._triplets[idx][3:]
+
+        return paths, classes
+
     @staticmethod
     def _get_filepath(triplet_file_id: int) -> str:
         """

@@ -7,6 +7,7 @@ Usage:
     main models list
     main models test (--student=<ID> | --teacher) --set=<ID> [--measure=<VAL>] \
 [-b SIZE] [-w NUM]
+    main triplets coverage --set=<ID>
     main triplets list
     main triplets make <num_triplets> <dataset> [--split=<VAL>] [-w <NUM>]
     main -h | --help
