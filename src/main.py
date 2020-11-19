@@ -86,7 +86,7 @@ def parse_options(options):
     if options["--train-set"]:
         options["--train-set"] = int(options["--train-set"])
     options["--workers"] = int(options["--workers"])
-    if options["<dataset>"] not in [None, "agedb", "vggface2"]:
+    if options["<dataset>"] not in [None, "agedb", "lfw", "vggface2"]:
         raise ValueError(f'{options["<dataset>"]} is an invalid dataset')
     if options["<model_name>"] not in [None, "mobilenet_v2"]:
         raise ValueError(f'{options["<model_name>"]} is an invalid model name')

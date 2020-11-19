@@ -205,6 +205,60 @@ class AgeDB(Raw):
         return images
 
 
+class LFW(Raw):
+    """LFW main class"""
+
+    @classmethod
+    def get_root_path(cls) -> str:
+        return os.path.join("data", "raw", "lfw")
+
+    @classmethod
+    def get_annotations_keys(cls) -> List[str]:
+        return ["class_id", "image_id"]
+
+    @classmethod
+    def is_available(cls) -> bool:
+        return os.path.exists(cls.get_root_path())
+
+    def get_name(self):
+        return "lfw"
+
+    def get_path(self) -> str:
+        return self.get_root_path()
+
+    def _load_annotations(self) -> List[dict]:
+        """
+        Load the list of annotations
+
+        :return: image annotations
+        """
+
+        annotations = []
+
+        for image in self._images:
+            filename, _ = os.path.splitext(os.path.basename(image))
+            values = filename.split("_")
+            class_id = "_".join(values[:-1])
+            image_id = values[-1]
+
+            annotations.append(
+                dict(zip(self.get_annotations_keys(), [class_id, image_id]))
+            )
+
+        return annotations
+
+    def _load_images(self) -> list:
+        """
+        Load the list of images
+
+        :return: image paths
+        """
+        target = os.path.join(self.get_root_path(), "*", "*.jpg")
+        images = glob(target)
+
+        return images
+
+
 class VGGFace2(Raw):
     """VGGFace2 main class"""
 

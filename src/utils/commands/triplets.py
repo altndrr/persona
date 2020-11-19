@@ -29,8 +29,11 @@ class Triplets(Base):
 
     def triplets_make(self):
         """Make a new triplet file"""
+        dataset = None
         if self.options["<dataset>"] == "agedb":
             dataset = raw.AgeDB()
+        elif self.options["<dataset>"] == "lfw":
+            dataset = raw.LFW()
         elif self.options["<dataset>"] == "vggface2" and self.options["--split"]:
             dataset = raw.VGGFace2(self.options["--split"])
 
