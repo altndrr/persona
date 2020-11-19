@@ -2,7 +2,6 @@
 
 import multiprocessing
 import os
-import random
 from glob import glob
 
 import numpy as np
@@ -15,6 +14,9 @@ from src.utils import path
 
 
 def _triplets(dataset: Raw, n_triplets: int, process_id: int):
+    # Set a different random state for each process.
+    random_state = np.random.RandomState(seed=None)
+
     classes = list(set([annotation["class_id"] for image, annotation in dataset]))
     triplet_list = []
 
@@ -26,15 +28,15 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
         positive = negative = None
 
         while pos_class is None or len(pos_images) < 2 or isinstance(pos_images, str):
-            pos_class = random.choice(classes)
+            pos_class = random_state.choice(classes)
             pos_images = dataset.get_images(class_id=pos_class)
 
         while neg_class is None or neg_class == pos_class:
-            neg_class = random.choice(classes)
+            neg_class = random_state.choice(classes)
 
-        anchor = random.choice(pos_images)
+        anchor = random_state.choice(pos_images)
         while positive is None or anchor == positive:
-            positive = random.choice(pos_images)
+            positive = random_state.choice(pos_images)
 
         while negative is None or negative in pos_images:
             negative = dataset.get_images(n_random=1)
@@ -50,6 +52,9 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
             triplet_list.append([*image_paths, pos_class, pos_class, neg_class])
 
             for aligned_image, image_path in zip(aligned_images, image_paths):
+                # NOTE: images are saved aligned but also post-processed, therefore we
+                # don't need to transform them on load using the method
+                # facenet_pytorch.fixed_image_standardization.
                 abs_image_path = os.path.join(path.get_project_root(), image_path)
                 save_path, save_name = os.path.split(abs_image_path)
                 os.makedirs(save_path, exist_ok=True)

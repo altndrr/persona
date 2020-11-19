@@ -82,7 +82,7 @@ class Models(Base):
 
         if self.options["--teacher"]:
             model = nn.teacher()
-        elif self.options["--student"]:
+        elif self.options["--student"] is not None:
             model_path = os.path.join(path.get_project_root(), "models")
             model_files = glob(os.path.join(model_path, "*.pth"))
 
@@ -93,10 +93,10 @@ class Models(Base):
                     model = torch.load(file)
                     break
 
-            if model is None:
-                raise ValueError(f"{self.options['<model_id >']} is an invalid file id")
+        if model is None:
+            raise ValueError(f"{self.options['--student']} is an invalid file id")
 
-        dataset = processed.TripletDataset(self.options["--test-set"])
+        dataset = processed.TripletDataset(self.options["--set"])
 
         print(f"Testing model {type(model).__name__}.")
         print(f"Evaluating {self.options['--measure']} accuracy.")

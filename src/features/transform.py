@@ -3,12 +3,12 @@
 import os
 from typing import List, Union
 
+import torchvision
 from facenet_pytorch import MTCNN
 from PIL import Image
 from torch import Tensor
-from torchvision.transforms import ToPILImage, ToTensor
 
-mtcnn = MTCNN()
+mtcnn = MTCNN(post_process=True)
 
 
 def align_images(
@@ -67,7 +67,8 @@ def images_to_tensors(*images: Union[str, Image.Image]) -> Union[Tensor, List[Te
         # Convert to RGB to fix the number of channels to three.
         image = image.convert("RGB")
 
-        tensors.append(ToTensor()(image))
+        trans = torchvision.transforms.Compose([torchvision.transforms.ToTensor()])
+        tensors.append(trans(image))
 
     if len(tensors) == 1:
         tensors = tensors[0]
@@ -82,7 +83,8 @@ def tensors_to_images(*tensors: Tensor) -> Union[Image.Image, List[Image.Image]]
     :param tensors: tensor representation of images
     :return: images
     """
-    images = [ToPILImage()(tensor) for tensor in tensors]
+    trans = torchvision.transforms.Compose([torchvision.transforms.ToPILImage()])
+    images = [trans(tensor) for tensor in tensors]
 
     if len(images) == 1:
         images = images[0]

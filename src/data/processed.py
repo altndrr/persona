@@ -27,19 +27,18 @@ class TripletDataset(torch.utils.data.Dataset):
 
         self._triplets = np.load(self._filepath)
 
+        trans = []
+
         if transforms:
-            self._transforms = torchvision.transforms.Compose(
-                [torchvision.transforms.RandomHorizontalFlip(0.5)]
-            )
-        else:
-            self._transforms = None
+            trans.append(torchvision.transforms.RandomHorizontalFlip(0.5))
+
+        self._transforms = torchvision.transforms.Compose(trans)
 
     def __getitem__(self, idx: int) -> Tuple[List[Tensor], List[str]]:
         images, classes = self._triplets[idx][:3], self._triplets[idx][3:]
         images = transform.images_to_tensors(*images)
 
-        if self._transforms is not None:
-            images = [self._transforms(image) for image in images]
+        images = [self._transforms(image) for image in images]
 
         return images, classes
 
