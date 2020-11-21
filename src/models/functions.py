@@ -13,8 +13,7 @@ from src.utils import data, models
 def distill(
     student: torch.nn.Module,
     datasets: Dict[str, processed.TripletDataset],
-    initial_temperature: int = 10,
-    temperature_decay: str = "linear",
+    temperature: int = 10,
     batch_size: int = 16,
     epochs: int = 10,
     lr: float = 0.001,
@@ -26,8 +25,7 @@ def distill(
 
     :param student: student network
     :param datasets: dictionary containing the train and test datasets
-    :param initial_temperature: initial temperature for distillation
-    :param temperature_decay: either constant or linear, defines how temperature changes over time
+    :param temperature: temperature of distillation
     :param batch_size: size of the batch for the train and test data loaders
     :param epochs: number of epochs to train
     :param lr: learning rate of the network
@@ -43,9 +41,6 @@ def distill(
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     classes = data.get_vggface2_classes("train")
-    temperatures = models.get_distillation_temperatures(
-        initial_temperature, epochs, temperature_decay
-    )
 
     student = student.train().to(device)
     teacher = nn.teacher().eval().to(device)
@@ -63,8 +58,7 @@ def distill(
     )
 
     for epoch in range(epochs):
-        temperature = next(temperatures)
-        print(f"\nEpoch {epoch + 1}, temperature = {temperature}")
+        print(f"\nEpoch {epoch + 1}")
 
         print("Training:")
         distill_step(

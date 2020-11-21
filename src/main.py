@@ -3,7 +3,7 @@ main
 
 Usage:
     main models distill <model_name> --train-set=<ID> --test-set=<ID> -e <NUM> -t <VAL> \
-[--decay=<TYPE>] [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
+[--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
     main models list
     main models test (--student=<ID> | --teacher) --set=<ID> [--measure=<VAL>] \
 [-b SIZE] [-w NUM]
@@ -16,9 +16,8 @@ Usage:
 Options:
     -b SIZE --batch=<SIZE>      Batch size [default: 16].
     -e NUM --epochs=<NUM>       Number of epochs to train.
-    -t NUM --temperature=<NUM>  Initial temperature for distillation.
+    -t NUM --temperature=<NUM>  Temperature for distillation.
     -w NUM --workers=<NUM>      Number of workers [default: 8].
-    --decay=<TYPE>              Type of temperature decay [default: linear].
     --lr=<VAL>                  Learning rate for training [default: 0.001].
     --measure=<VAL>             Test measure to use, either class or match [default: match].
     --no-lr-scheduler           Don't use a learning rate scheduler.
@@ -67,8 +66,6 @@ def parse_options(options):
     :return: parsed dictionary
     """
     options["--batch"] = int(options["--batch"])
-    if options["--decay"] not in ["constant", "linear"]:
-        raise ValueError(f'{options["--decay"]} is an invalid decay type')
     if options["--epochs"]:
         options["--epochs"] = int(options["--epochs"])
     options["--lr"] = float(options["--lr"])

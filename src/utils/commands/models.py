@@ -38,10 +38,7 @@ class Models(Base):
         print(f'Train set composed of {len(datasets["train"])} triplets.')
         print(f'Test set composed of {len(datasets["test"])} triplets.')
         print(f'Training for {self.options["--epochs"]} epochs.')
-        print(
-            f'Start temperature {self.options["--temperature"]}, '
-            f'decay {self.options["--decay"]}.'
-        )
+        print(f'Distillation temperature set to {self.options["--temperature"]}.')
         print(f'Training with {self.options["--lr"]} learning rate.')
         if not self.options["--no-lr-scheduler"]:
             print(f"Using MultiStep learning rate.")
@@ -51,8 +48,7 @@ class Models(Base):
         student = functions.distill(
             student,
             datasets,
-            initial_temperature=self.options["--temperature"],
-            temperature_decay=self.options["--decay"],
+            temperature=self.options["--temperature"],
             batch_size=self.options["--batch"],
             epochs=self.options["--epochs"],
             lr=self.options["--lr"],
