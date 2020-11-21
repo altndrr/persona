@@ -226,8 +226,6 @@ def distill_step(
 
     count = 0
     for _, (inputs, labels) in enumerate(loader):
-        n_triplets = len(inputs) / 3
-
         # Convert the class names with the class id and transpose the tensor.
         labels = [classes.index(label) for label in labels]
         labels = torch.LongTensor(labels).T
@@ -240,17 +238,13 @@ def distill_step(
         teacher_outputs = teacher(inputs)
 
         # Evaluate the soft loss.
-        soft_loss = 0
-        for i in range(0, len(inputs), 3):
-            soft_outputs = torch.nn.functional.log_softmax(
-                student_outputs[i : i + 3] / temperature, dim=1
-            )
-            soft_targets = torch.nn.functional.softmax(
-                teacher_outputs[i : i + 3] / temperature, dim=1
-            )
-            soft_loss += torch.nn.functional.kl_div(
-                soft_outputs, soft_targets.detach(), reduction="batchmean"
-            )
+        soft_outputs = torch.nn.functional.log_softmax(
+            student_outputs / temperature, dim=1
+        )
+        soft_targets = torch.nn.functional.softmax(teacher_outputs / temperature, dim=1)
+        soft_loss = torch.nn.functional.kl_div(
+            soft_outputs, soft_targets.detach(), reduction="batchmean"
+        )
 
         # It is important to multiply the soft loss by T^2 when using both hard and soft
         # targets. This ensures that the relative contributions of the hard and soft
@@ -262,15 +256,16 @@ def distill_step(
         hard_loss = torch.nn.functional.cross_entropy(student_outputs, labels)
 
         # Evaluate the weighted average loss.
-        loss = soft_loss + hard_loss
+        soft_weight, hard_weight = 0.9, 0.1
+        loss = soft_loss * soft_weight + hard_loss * hard_weight
 
         loss.backward()
         optimizer.step()
 
         # Print statistics.
-        running_loss += loss.item() / n_triplets
-        running_soft_loss += soft_loss.item() / n_triplets
-        running_hard_loss += hard_loss.item() / n_triplets
+        running_loss += loss.item()
+        running_soft_loss += soft_loss.item() * soft_weight
+        running_hard_loss += hard_loss.item() * hard_weight
         if count % print_every == print_every - 1:
             print(
                 "[%d, %5d] loss: %.3f (soft: %.3f, hard: %.3f)"
