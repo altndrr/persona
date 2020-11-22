@@ -58,7 +58,8 @@ def _triplets(dataset: Raw, n_triplets: int, process_id: int):
                 abs_image_path = os.path.join(path.get_project_root(), image_path)
                 save_path, save_name = os.path.split(abs_image_path)
                 os.makedirs(save_path, exist_ok=True)
-                save_image(aligned_image, image_path)
+                normalized_image = aligned_image / 255.0
+                save_image(normalized_image, image_path)
 
     # Update the total value of triplets, since some could have been discarded (i.e. not able to
     # align, or other reason)

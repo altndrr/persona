@@ -6,6 +6,7 @@ from typing import List, Tuple
 import numpy as np
 import torch.utils.data
 import torchvision.transforms
+from facenet_pytorch import fixed_image_standardization
 from torch import Tensor
 
 from src.features import transform
@@ -27,12 +28,12 @@ class TripletDataset(torch.utils.data.Dataset):
 
         self._triplets = np.load(self._filepath)
 
-        trans = []
+        transformations = [fixed_image_standardization]
 
         if transforms:
-            trans.append(torchvision.transforms.RandomHorizontalFlip(0.5))
+            transformations.append(torchvision.transforms.RandomHorizontalFlip(0.5))
 
-        self._transforms = torchvision.transforms.Compose(trans)
+        self._transforms = torchvision.transforms.Compose(transformations)
 
     def __getitem__(self, idx: int) -> Tuple[List[Tensor], List[str]]:
         images, classes = self._triplets[idx][:3], self._triplets[idx][3:]
