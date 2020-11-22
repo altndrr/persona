@@ -34,22 +34,30 @@ class Triplets(Base):
             total_paths.extend(paths)
         total_classes = list(set(total_classes))
         total_paths = list(set(total_paths))
-        print(f"Test set composed of {len(total_classes)} unique classes.")
-        print(f"Test set composed of {len(total_paths)} unique images.")
+        print(f"Test dataset composed of {len(total_classes)} unique classes "
+              f"and {len(total_paths)} unique images.")
 
-        original_dataset = None
+        dataset_classes = None
         if triplet_dataset.get_name() == "agedb":
             original_dataset = raw.AgeDB()
+            dataset_classes = 567
         elif triplet_dataset.get_name() == "lfw":
             original_dataset = raw.LFW()
+            dataset_classes = 5479
         elif triplet_dataset.get_name() == "vggface2_test":
             original_dataset = raw.VGGFace2("test")
+            dataset_classes = 500
         elif triplet_dataset.get_name() == "vggface2_train":
             original_dataset = raw.VGGFace2("train")
-        print(f"Raw dataset composed of {len(original_dataset)} unique images.")
+            dataset_classes = 8631
+        dataset_images = len(original_dataset)
+        print(f"Raw dataset composed of {dataset_classes} unique classes "
+              f"and {dataset_images} unique images.")
 
-        image_coverage = len(total_paths) / len(original_dataset)
-        print(f"Image coverage of {image_coverage}.")
+        class_coverage = len(total_classes) / dataset_classes
+        image_coverage = len(total_paths) / dataset_images
+        print("Class coverage: %.3f." % class_coverage)
+        print("Class coverage: %.3f." % image_coverage)
 
     def triplets_list(self):
         """List the generated triplets"""
