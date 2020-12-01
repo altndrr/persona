@@ -5,7 +5,7 @@ Usage:
     main models distill <model_name> --train-set=<ID> --test-set=<ID> -e <NUM> -t <VAL> \
 [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
     main models list
-    main models test (--student=<ID> | --teacher) --set=<ID> [--measure=<VAL>] \
+    main models test (--student=<ID> | --teacher) --set=[<ID> | lfw] [--measure=<VAL>] \
 [-b SIZE] [-w NUM]
     main triplets coverage --set=<ID>
     main triplets list
@@ -21,11 +21,11 @@ Options:
     --lr=<VAL>                  Learning rate for training [default: 0.001].
     --measure=<VAL>             Test measure to use, either class or match [default: match].
     --no-lr-scheduler           Don't use a learning rate scheduler.
-    --set=<ID>                  ID of a triplet dataset (either for training or testing).
+    --set=[<ID> | lfw]          Identifier of a dataset.
     --split=<VAL>               Split of the dataset, either train or test.
     --student=<ID>              ID of the student network.
-    --train-set=<ID>            ID of the training set.
-    --test-set=<ID>             ID of the testing set.
+    --train-set=<ID>            Identifier of the training set.
+    --test-set=<ID>             Identifier of the testing set.
     -h --help                   Show this screen.
     --version                   Show version.
 """
@@ -72,7 +72,8 @@ def parse_options(options):
     if options["--measure"] not in ["class", "match"]:
         raise ValueError(f'{options["--measure"]} is an invalid test measure')
     if options["--set"]:
-        options["--set"] = int(options["--set"])
+        if options["--set"] != "lfw":
+            options["--set"] = int(options["--set"])
     if options["--split"] not in [None, "test", "train"]:
         raise ValueError(f'{options["--measure"]} is an invalid test measure')
     if options["--student"]:

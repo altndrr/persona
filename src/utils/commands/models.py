@@ -6,7 +6,7 @@ import torch
 
 from src.data import processed
 from src.models import functions, nn
-from src.utils import path
+from src.utils import data, path
 from src.utils.commands import Base
 
 
@@ -94,11 +94,16 @@ class Models(Base):
         if model is None:
             raise ValueError(f"{self.options['--student']} is an invalid file id")
 
-        dataset = processed.TripletDataset(self.options["--set"])
+        if self.options["--set"] == "lfw":
+            dataset = data.get_lfw_dataset()
+            dataset_size = len(dataset)
+        else:
+            dataset = processed.TripletDataset(self.options["--set"])
+            dataset_size = len(dataset) * 3
 
         print(f"Testing model {type(model).__name__}.")
         print(f"Evaluating {self.options['--measure']} accuracy.")
-        print(f"Test set composed of {len(dataset)} triplets.")
+        print(f"Test set composed of {dataset_size} images.")
         print(f'Using a batch size of {self.options["--batch"]}.')
         print(f'Using {self.options["--workers"]} workers.')
 

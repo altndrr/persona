@@ -48,7 +48,8 @@ representing their identities. Moreover, VGGFace2 is split into test and train. 
 │   ├── Aaron_Eckhart
 │   │   │   └── Aaron_Eckhart_0001.jpg
 │   ├── Aaron_Guiel
-│   └── ...
+│   ├── ...
+│   └── pairs.txt
 ├── VGGFace2
 │   ├── test
 │   │   ├── n000001
@@ -65,7 +66,9 @@ representing their identities. Moreover, VGGFace2 is split into test and train. 
 │   └── train_list.txt
 ```
 
-Note that in the VGGFace2 folder there are also a `test_list.txt` and a `train_list.txt` files that are required.
+Note that in the VGGFace2 folder there are also a `test_list.txt` and a `train_list.txt` files that
+are required. The same reasoning goes for the `pairs.txt` file in the LFW folder. All of the files
+can be retrieved on the datasets' website.
 
 ## Usage
 
