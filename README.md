@@ -175,6 +175,9 @@ required to use the same dataset as the one used for training the teacher, there
 use a triplet dataset based on the train split of the VGGFace2 dataset. For testing, every dataset
 can be used, but LFW is suggested since the results of the teacher are known for it.
 
+The available models for distillation are MobileNetV3 Large and Small. To use either one or the
+other one should set the `<model_name>` argument as `mobilenet_v3_large` or `mobilenet_v3_small`.
+
 ```
 python -m src models distill <model_name> --train-set=<ID> --test-set=<ID> -e <NUM> -t <VAL> [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
 ```

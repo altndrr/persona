@@ -86,7 +86,11 @@ def parse_options(options):
     options["--workers"] = int(options["--workers"])
     if options["<dataset>"] not in [None, "agedb", "lfw", "vggface2"]:
         raise ValueError(f'{options["<dataset>"]} is an invalid dataset')
-    if options["<model_name>"] not in [None, "mobilenet_v2"]:
+    if options["<model_name>"] not in [
+        None,
+        "mobilenet_v3_large",
+        "mobilenet_v3_small",
+    ]:
         raise ValueError(f'{options["<model_name>"]} is an invalid model name')
     if options["<num_triplets>"]:
         options["<num_triplets>"] = int(options["<num_triplets>"])

@@ -24,8 +24,10 @@ class Models(Base):
     def model_distill(self):
         """Distill a model with the knowledge of a teacher"""
         student = None
-        if self.options["<model_name>"] == "mobilenet_v2":
-            student = nn.mobilenet_v2()
+        if self.options["<model_name>"] == "mobilenet_v3_large":
+            student = nn.mobilenet_v3(classify=True, mode="large")
+        elif self.options["<model_name>"] == "mobilenet_v3_small":
+            student = nn.mobilenet_v3(classify=True, mode="small")
 
         datasets = {
             "train": processed.TripletDataset(

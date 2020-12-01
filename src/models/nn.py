@@ -1,26 +1,14 @@
-"""Collection of mobilenet implementations"""
+"""Collection of neural networks used in the module."""
 
 import torch
-import torchvision.models
 from facenet_pytorch import InceptionResnetV1
 
-
-def mobilenet_v2() -> torch.nn.Module:
-    student = torchvision.models.mobilenet_v2(pretrained=False)
-
-    student.classifier = torch.nn.Sequential(
-        # Keep the same dropout as of the base mobilenet.
-        torch.nn.Dropout(p=0.2, inplace=False),
-        # Add a linear that matches the out_features of the teacher.
-        torch.nn.Linear(in_features=1280, out_features=512, bias=False),
-        # Add a batch norm as in the teacher.
-        torch.nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True),
-        # Add a last linear that matches the number of classes in VGGFace2.
-        torch.nn.Linear(512, 8631),
-    )
-
-    return student
+from src.models.mobilenet import mobilenetv3
 
 
-def teacher() -> torch.nn.Module:
-    return InceptionResnetV1(pretrained="vggface2", classify=True)
+def mobilenet_v3(classify=False, mode="small") -> torch.nn.Module():
+    return mobilenetv3(pretrained=False, classify=classify, n_class=8631, mode=mode)
+
+
+def teacher(classify=False) -> torch.nn.Module:
+    return InceptionResnetV1(pretrained="vggface2", classify=classify)

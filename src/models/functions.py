@@ -43,7 +43,7 @@ def distill(
     classes = data.get_vggface2_classes("train")
 
     student = student.train().to(device)
-    teacher = nn.teacher().eval().to(device)
+    teacher = nn.teacher(classify=True).eval().to(device)
 
     train_loader = data.get_triplet_dataloader(
         datasets["train"], batch_size, num_workers
@@ -61,6 +61,7 @@ def distill(
         print(f"\nEpoch {epoch + 1}")
 
         print("Training:")
+        student.classify = True
         distill_step(
             student,
             teacher,
@@ -73,8 +74,9 @@ def distill(
         )
 
         print("Testing:")
+        student.classify = False
         accuracy = test_match_accuracy(student, test_loader, device)
-        print(f"Match accuracy: {accuracy}")
+        print("Match accuracy: %.3f" % accuracy)
 
         if scheduler:
             scheduler.step()
@@ -119,7 +121,7 @@ def test(
     elif measure == "match":
         accuracy = test_match_accuracy(network, loader, device)
 
-    print(f"{measure.title()} accuracy: {accuracy}")
+    print("%s accuracy: %.3f" % (measure.title(), accuracy))
 
 
 def test_class_accuracy(
