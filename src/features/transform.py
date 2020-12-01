@@ -8,6 +8,10 @@ import torchvision
 from facenet_pytorch import MTCNN
 from PIL import Image
 from torch import Tensor
+from torch.utils.data import DataLoader
+
+from src.utils import path
+from src.utils.data import collate_pil
 
 mtcnn = MTCNN(
     image_size=160,
@@ -51,6 +55,61 @@ def align_images(
         aligned_images = aligned_images[0]
 
     return aligned_images
+
+
+def align_dataset(data_dir, batch_size, workers, device):
+    """
+    Given the directory of a dataset, tries to align all of the images inside it.
+
+    The function returns the list of image batches in which an image couldn't be
+    aligned (a single failed alignment stops the rest of the batch).
+    To align an higher number of images, it is suggested to align one-by-one the returned
+    list (i.e. with a batch_size of 1).
+
+    :param data_dir: path to the data directory
+    :param batch_size: dimension of a batch
+    :param workers: number of workers to use
+    :param device: device to use for detection and alignment
+    :return: list of images batches that couldn't be completely aligned
+    """
+    mtcnn_ = MTCNN(
+        image_size=160,
+        margin=14,
+        selection_method="center_weighted_size",
+        post_process=False,
+        device=device,
+    )
+
+    class SquarePad:
+        def __call__(self, image):
+            w, h = image.size
+            max_wh = np.max([w, h])
+            hp = int((max_wh - w) / 2)
+            vp = int((max_wh - h) / 2)
+            padding = (hp, vp, hp, vp)
+            return torchvision.transforms.functional.pad(image, padding)
+
+    trans = torchvision.transforms.Compose(
+        [SquarePad(), torchvision.transforms.Resize((255, 255)),]
+    )
+
+    dataset = torchvision.datasets.ImageFolder(data_dir, transform=trans)
+    dataset.samples = [(p, p) for p, _ in dataset.samples]
+
+    loader = DataLoader(
+        dataset, num_workers=workers, batch_size=batch_size, collate_fn=collate_pil
+    )
+
+    unable_to_align = []
+    for i, (x, paths) in enumerate(loader):
+        crops = [path.change_data_category(p, "processed") for p in paths]
+        try:
+            mtcnn_(x, save_path=crops)
+        except:
+            unable_to_align.extend(crops)
+        print("\rBatch {} of {}".format(i + 1, len(loader)), end="")
+
+    return unable_to_align
 
 
 def images_to_tensors(*images: Union[str, Image.Image]) -> Union[Tensor, List[Tensor]]:

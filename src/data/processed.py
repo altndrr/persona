@@ -85,23 +85,3 @@ class TripletDataset(torch.utils.data.Dataset):
         basename, _ = os.path.splitext(basename)
         parts = basename.split("_")[1:-1]
         return "_".join(parts)
-
-    @staticmethod
-    def collate_fn(
-        batch: List[Tuple[List[Tensor], List[str]]]
-    ) -> Tuple[Tensor, List[str]]:
-        """Collate function for the dataset
-
-        :param batch: batch of data to collate
-        :return:
-        """
-
-        batch_images, batch_classes = [], []
-
-        for images, classes in batch:
-            batch_images.append(torch.stack(images))
-            batch_classes.extend(classes)
-
-        batch_images = torch.cat(batch_images)
-
-        return batch_images, batch_classes
