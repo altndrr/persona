@@ -358,3 +358,4 @@ $RECYCLE.BIN/
 # Custom
 .idea/*
 data/*/*
+models/*
