@@ -1,5 +1,6 @@
 """Collection of classes for processed datasets."""
 import os
+import random
 from glob import glob
 from typing import List, Tuple
 
@@ -85,3 +86,28 @@ class TripletDataset(torch.utils.data.Dataset):
         basename, _ = os.path.splitext(basename)
         parts = basename.split("_")[1:-1]
         return "_".join(parts)
+
+
+class FolderDataset(torchvision.datasets.ImageFolder):
+    def __init__(self, image_path, transform=False, shuffle=False):
+        super().__init__(image_path)
+        self.root = image_path
+        self.images = self.samples.copy()
+
+        if shuffle:
+            random.shuffle(self.images)
+
+        transformations = [fixed_image_standardization]
+        if transform:
+            transformations.append(torchvision.transforms.RandomHorizontalFlip(0.5))
+        self._transforms = torchvision.transforms.Compose(transformations)
+
+    def __getitem__(self, index):
+        image, class_ = self.images[index]
+        image = transform.images_to_tensors(image)
+        image = self._transforms(image)
+
+        return image, class_
+
+    def __len__(self):
+        return len(self.images)

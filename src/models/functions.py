@@ -37,7 +37,10 @@ def distill(
     :return: distilled student
     """
 
-    if datasets["train"].get_name() != "vggface2_train":
+    if (
+        isinstance(datasets["train"], processed.TripletDataset)
+        and datasets["train"].get_name() != "vggface2_train"
+    ):
         raise ValueError(
             "the train dataset must be based on the train partition of the vggface2 raw dataset"
         )
@@ -87,7 +90,7 @@ def distill(
 
 def test(
     network: torch.nn.Module,
-    dataset: Union[processed.TripletDataset, torchvision.datasets.ImageFolder],
+    dataset: Union[processed.TripletDataset, processed.FolderDataset],
     measure: str,
     batch_size: int = 16,
     num_workers: int = 8,
@@ -124,7 +127,7 @@ def test(
             accuracy = test_match_accuracy(network, loader, device)
 
         print("%s accuracy: %.3f" % (measure.title(), accuracy))
-    elif isinstance(dataset, torchvision.datasets.ImageFolder):
+    elif isinstance(dataset, processed.FolderDataset):
         if measure == "class":
             raise ValueError(f"class accuracy cannot be measured on lfw dataset")
         loader = data.get_image_dataloader(dataset, batch_size, num_workers)
