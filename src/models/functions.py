@@ -6,12 +6,11 @@ from typing import Dict, Union
 import numpy as np
 import torch
 import torch.utils.data
-import torchvision
 
+import src.utils as utils
 from src.data import processed
 from src.models import nn
-from src.utils import datasets as datas
-from src.utils import lfw, models, path
+from src.utils import lfw
 
 
 def distill(
@@ -47,19 +46,23 @@ def distill(
         )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    classes = datas.get_vggface2_classes("train")
+    classes = utils.datasets.get_vggface2_classes("train")
 
     student = student.to(device)
     teacher = nn.teacher(classify=True).eval().to(device)
 
-    train_loader = datas.get_dataloader(datasets["train"], batch_size, num_workers)
-    test_loader = datas.get_dataloader(datasets["test"], batch_size, num_workers)
+    train_loader = utils.datasets.get_dataloader(
+        datasets["train"], batch_size, num_workers
+    )
+    test_loader = utils.datasets.get_dataloader(
+        datasets["test"], batch_size, num_workers
+    )
 
     optimizer = torch.optim.Adam(student.parameters(), lr=lr)
     scheduler = (
         None
         if no_lr_scheduler
-        else models.get_distillation_lr_scheduler(epochs, optimizer)
+        else utils.models.get_distillation_lr_scheduler(epochs, optimizer)
     )
 
     for epoch in range(epochs):
@@ -78,127 +81,13 @@ def distill(
         )
 
         print("Testing:")
-        accuracy = test_match_accuracy(student, test_loader, device)
+        accuracy = evaluation_step(student, test_loader, device)
         print("Match accuracy: %.3f" % accuracy)
 
         if scheduler:
             scheduler.step()
 
     return student
-
-
-def test(
-    network: torch.nn.Module,
-    dataset: Union[processed.TripletDataset, processed.FolderDataset],
-    measure: str,
-    batch_size: int = 16,
-    num_workers: int = 8,
-):
-    """
-    Test a network on a specific dataset.
-
-    :param network: neural network to test
-    :param dataset: collection of data to test
-    :param batch_size: size of the batch for the train and test data loaders
-    :param measure: measure to test, either class or match accuracy
-    :param num_workers: number of workers to use for each data loader
-    :return:
-    """
-    if measure not in ["class", "match"]:
-        raise ValueError(f"{measure} is an invalid test measure")
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    network = network.to(device)
-
-    if isinstance(dataset, processed.TripletDataset):
-        loader = datas.get_triplet_dataloader(dataset, batch_size, num_workers)
-
-        if measure == "class" and loader.dataset.get_name() != "vggface2_train":
-            raise ValueError(
-                f"class accuracy can only be measured on a vggface2 train dataset"
-            )
-
-        accuracy = 0
-        if measure == "class":
-            accuracy = test_class_accuracy(network, loader, device)
-        elif measure == "match":
-            accuracy = test_match_accuracy(network, loader, device)
-
-        print("%s accuracy: %.3f" % (measure.title(), accuracy))
-    elif isinstance(dataset, processed.FolderDataset):
-        if measure == "class":
-            raise ValueError(f"class accuracy cannot be measured on lfw dataset")
-        loader = datas.get_folder_dataloader(dataset, batch_size, num_workers)
-        accuracy = test_lfw(network, loader, device)
-        print("LFW mean accuracy: %.3f" % accuracy)
-
-
-def test_class_accuracy(
-    network: torch.nn, loader: torch.utils.data.DataLoader, device: torch.device
-) -> float:
-    """
-    Test the class accuracy of a network on a dataset.
-
-    :param network: network to test
-    :param loader: loader to test
-    :param device: device to use
-    :return: result accuracy
-    """
-    network.eval()
-    network.classify = True
-
-    accuracy = 0
-    classes = datas.get_vggface2_classes("train")
-
-    for _, sample in enumerate(loader):
-        inputs, labels = sample
-        inputs = inputs.to(device)
-
-        outputs = network(inputs)
-
-        # Convert the class names with the class id and transpose the tensor.
-        labels = [classes.index(label) for label in labels]
-        labels = torch.LongTensor(labels).T
-        labels = labels.to(device)
-
-        output_labels = torch.topk(outputs, 1).indices.view(-1)
-        accuracy += torch.count_nonzero(output_labels == labels)
-
-    accuracy = accuracy / (len(loader.dataset) * 3)
-    return accuracy
-
-
-def test_match_accuracy(network, loader, device) -> float:
-    """
-    Test the match accuracy of a network on a dataset.
-
-    :param network: network to test
-    :param loader: loader to test
-    :param device: device to use
-    :return: result accuracy
-    """
-    network.eval()
-    network.classify = False
-
-    accuracy = 0
-
-    for _, (inputs, labels) in enumerate(loader):
-        inputs = inputs.to(device)
-
-        outputs = network(inputs)
-
-        for i in range(0, len(inputs), 3):
-            triplet = outputs[i : i + 3]
-            distance = [
-                (triplet[0] - triplet[1]).norm().item(),
-                (triplet[0] - triplet[2]).norm().item(),
-            ]
-            if distance[0] < distance[1]:
-                accuracy += 1
-
-    accuracy /= len(loader.dataset)
-    return accuracy
 
 
 def distill_step(
@@ -235,8 +124,9 @@ def distill_step(
 
     count = 0
     for _, (inputs, labels) in enumerate(loader):
-        # Convert the class names with the class id and transpose the tensor.
-        labels = [classes.index(label) for label in labels]
+        # If needed, convert the class names with the class id and transpose the tensor.
+        if isinstance(loader.dataset, processed.TripletDataset):
+            labels = utils.data.convert_classes_to_indexes(labels, classes)
         labels = torch.LongTensor(labels).T
 
         inputs, labels = inputs.to(device), labels.to(device)
@@ -293,6 +183,137 @@ def distill_step(
         count += 1
 
 
+def evaluation_step(student, loader, device):
+    """
+    Perform a single step of evaluation.
+
+    :param student: student network
+    :param loader: loader used for testing
+    :param device: device to use
+    :return:
+    """
+    if isinstance(loader.dataset, processed.TripletDataset):
+        return test_match_accuracy(student, loader, device)
+    elif isinstance(loader.dataset, processed.FolderDataset):
+        return test_lfw(student, loader, device)
+    else:
+        raise ValueError("The evaluation dataset is not a valid one.")
+
+
+def test(
+    network: torch.nn.Module,
+    dataset: Union[processed.TripletDataset, processed.FolderDataset],
+    measure: str,
+    batch_size: int = 16,
+    num_workers: int = 8,
+):
+    """
+    Test a network on a specific dataset.
+
+    :param network: neural network to test
+    :param dataset: collection of data to test
+    :param batch_size: size of the batch for the train and test data loaders
+    :param measure: measure to test, either class or match accuracy
+    :param num_workers: number of workers to use for each data loader
+    :return:
+    """
+    if measure not in ["class", "match"]:
+        raise ValueError(f"{measure} is an invalid test measure")
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    network = network.to(device)
+
+    if isinstance(dataset, processed.TripletDataset):
+        loader = utils.datasets.get_triplet_dataloader(dataset, batch_size, num_workers)
+
+        if measure == "class" and loader.dataset.get_name() != "vggface2_train":
+            raise ValueError(
+                f"class accuracy can only be measured on a vggface2 train dataset"
+            )
+
+        accuracy = 0
+        if measure == "class":
+            accuracy = test_class_accuracy(network, loader, device)
+        elif measure == "match":
+            accuracy = test_match_accuracy(network, loader, device)
+
+        print("%s accuracy: %.3f" % (measure.title(), accuracy))
+    elif isinstance(dataset, processed.FolderDataset):
+        if measure == "class":
+            raise ValueError(f"class accuracy cannot be measured on lfw dataset")
+        loader = utils.datasets.get_folder_dataloader(dataset, batch_size, num_workers)
+        accuracy = test_lfw(network, loader, device)
+        print("LFW mean accuracy: %.3f" % accuracy)
+
+
+def test_class_accuracy(
+    network: torch.nn, loader: torch.utils.data.DataLoader, device: torch.device
+) -> float:
+    """
+    Test the class accuracy of a network on a dataset.
+
+    :param network: network to test
+    :param loader: loader to test
+    :param device: device to use
+    :return: result accuracy
+    """
+    network.eval()
+    network.classify = True
+
+    accuracy = 0
+    classes = utils.datasets.get_vggface2_classes("train")
+
+    for _, sample in enumerate(loader):
+        inputs, labels = sample
+        inputs = inputs.to(device)
+
+        outputs = network(inputs)
+
+        # Convert the class names with the class id and transpose the tensor.
+        labels = [classes.index(label) for label in labels]
+        labels = torch.LongTensor(labels).T
+        labels = labels.to(device)
+
+        output_labels = torch.topk(outputs, 1).indices.view(-1)
+        accuracy += torch.count_nonzero(output_labels == labels)
+
+    accuracy = accuracy / (len(loader.dataset) * 3)
+    return accuracy
+
+
+def test_match_accuracy(network, loader, device) -> float:
+    """
+    Test the match accuracy of a network on a dataset.
+
+    :param network: network to test
+    :param loader: loader to test
+    :param device: device to use
+    :return: result accuracy
+    """
+    network.eval()
+    network.classify = False
+
+    accuracy = 0
+
+    for _, (inputs, labels) in enumerate(loader):
+        inputs = inputs.to(device)
+
+        outputs = network(inputs)
+
+        for i in range(0, len(inputs), 3):
+            triplet = outputs[i : i + 3]
+            distance = [
+                (triplet[0] - triplet[1]).norm().item(),
+                (triplet[0] - triplet[2]).norm().item(),
+            ]
+            if distance[0] < distance[1]:
+                accuracy += 1
+
+    accuracy /= len(loader.dataset)
+    return accuracy
+
+
 def test_lfw(network, loader, device):
     """
     Test the class accuracy of a network on a dataset.
@@ -305,9 +326,9 @@ def test_lfw(network, loader, device):
     network.eval()
     network.classify = False
 
-    data_dir = os.path.join(path.get_project_root(), "data", "processed", "lfw")
+    data_dir = os.path.join(utils.path.get_project_root(), "data", "processed", "lfw")
     pairs_path = os.path.join(
-        path.get_project_root(), "data", "raw", "lfw", "pairs.txt"
+        utils.path.get_project_root(), "data", "raw", "lfw", "pairs.txt"
     )
 
     paths = sorted(glob(os.path.join(data_dir, "*", "*.jpg")))

@@ -84,7 +84,7 @@ python -m src
 Doing so with no options will display the `help` document.
 ```
 Usage:
-    main models distill <model_name> --train-set=<ID> --test-set=<ID> -e <NUM> -t <VAL> [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
+    main models distill <model_name> --train-set=[<ID> | vggface2] --test-set=[<ID> | lfw] -e <NUM> -t <VAL> [--lr=<VAL>] [--no-lr-scheduler] [-b SIZE] [-w NUM]
     main models list
     main models test (--student=<ID> | --teacher) --set=<ID> [--measure=<VAL>] [-b SIZE] [-w NUM]
     main triplets coverage --set=<ID>
@@ -94,20 +94,20 @@ Usage:
     main --version
 
 Options:
-    -b SIZE --batch=<SIZE>      Batch size [default: 16].
-    -e NUM --epochs=<NUM>       Number of epochs to train.
-    -t NUM --temperature=<NUM>  Temperature for distillation.
-    -w NUM --workers=<NUM>      Number of workers [default: 8].
-    --lr=<VAL>                  Learning rate for training [default: 0.001].
-    --measure=<VAL>             Test measure to use, either class or match [default: match].
-    --no-lr-scheduler           Don't use a learning rate scheduler.
-    --set=<ID>                  ID of a triplet dataset (either for training or testing).
-    --split=<VAL>               Split of the dataset, either train or test.
-    --student=<ID>              ID of the student network.
-    --train-set=<ID>            ID of the training set.
-    --test-set=<ID>             ID of the testing set.
-    -h --help                   Show this screen.
-    --version                   Show version.
+    -b SIZE --batch=<SIZE>          Batch size [default: 16].
+    -e NUM --epochs=<NUM>           Number of epochs to train.
+    -t NUM --temperature=<NUM>      Temperature for distillation.
+    -w NUM --workers=<NUM>          Number of workers [default: 8].
+    --lr=<VAL>                      Learning rate for training [default: 0.001].
+    --measure=<VAL>                 Test measure to use, either class or match [default: match].
+    --no-lr-scheduler               Don't use a learning rate scheduler.
+    --set=[<ID> | lfw | vggface2]   ID of a triplet (either for training or for testing) or dataset name.
+    --split=<VAL>                   Split of the dataset, either train or test.
+    --student=<ID>                  ID of the student network.
+    --train-set=[<ID> | vggface2]   ID of the training set or dataset name.
+    --test-set=[<ID> | lfw]         ID of the testing set or dataset name.
+    -h --help                       Show this screen.
+    --version                       Show version.
 ```
 
 ### Manage script

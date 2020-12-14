@@ -6,7 +6,8 @@ import torch
 
 from src.data import processed
 from src.models import functions, nn
-from src.utils import data, path
+from src.utils import datasets as ds
+from src.utils import path
 from src.utils.commands import Base
 
 
@@ -29,16 +30,13 @@ class Models(Base):
         elif self.options["<model_name>"] == "mobilenet_v3_small":
             student = nn.mobilenet_v3(classify=True, mode="small")
 
-        datasets = {
-            "train": processed.TripletDataset(
-                self.options["--train-set"], transforms=True
-            ),
-            "test": processed.TripletDataset(self.options["--test-set"]),
-        }
+        train_set, train_size = self._get_dataset(self.options["--train-set"])
+        test_set, test_size = self._get_dataset(self.options["--test-set"])
+        datasets = {"train": train_set, "test": test_set}
 
         print(f"Distilling model {type(student).__name__}.")
-        print(f'Train set composed of {len(datasets["train"])} triplets.')
-        print(f'Test set composed of {len(datasets["test"])} triplets.')
+        print(f"Train set composed of {train_size} images.")
+        print(f"Test set composed of {test_size} images.")
         print(f'Training for {self.options["--epochs"]} epochs.')
         print(f'Distillation temperature set to {self.options["--temperature"]}.')
         print(f'Training with {self.options["--lr"]} learning rate.')
@@ -78,7 +76,7 @@ class Models(Base):
         triplet_files = glob(os.path.join(models_path, "*.pth"))
         print_text = "\n - " + "\n - ".join(triplet_files)
 
-        print(f"Triplets list: {print_text}")
+        print(f"Models list: {print_text}")
 
     def model_test(self):
         """Test a model's performance on a dataset"""
@@ -100,12 +98,7 @@ class Models(Base):
         if model is None:
             raise ValueError(f"{self.options['--student']} is an invalid file id")
 
-        if self.options["--set"] == "lfw":
-            dataset = data.get_lfw_dataset()
-            dataset_size = len(dataset)
-        else:
-            dataset = processed.TripletDataset(self.options["--set"])
-            dataset_size = len(dataset) * 3
+        dataset, dataset_size = self._get_dataset(self.options["--set"])
 
         print(f"Testing model {type(model).__name__}.")
         print(f"Evaluating {self.options['--measure']} accuracy.")
@@ -120,3 +113,15 @@ class Models(Base):
             batch_size=self.options["--batch"],
             num_workers=self.options["--workers"],
         )
+
+    def _get_dataset(self, option):
+        if option == "vggface2":
+            dataset = ds.get_vggface2_dataset()
+            dataset_size = len(dataset)
+        elif option == "lfw":
+            dataset = ds.get_lfw_dataset()
+            dataset_size = len(dataset)
+        else:
+            dataset = processed.TripletDataset(option)
+            dataset_size = len(dataset) * 3
+        return dataset, dataset_size
