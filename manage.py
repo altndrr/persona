@@ -2,7 +2,7 @@
 manage
 
 Usage:
-    manage code (-f | --format | -l | --lint | -t | --test)...
+    manage code (-f | --format | -l | --lint)...
     manage -h | --help
 
 Options:
@@ -32,12 +32,6 @@ def code(options):
 
     if options["--lint"] or options["-l"]:
         os.system("pylint src")
-
-    if options["--test"] or options["-t"]:
-        os.system(
-            "pytest --cov=src --cov-report term-missing \
-                   -n auto --timeout=180 src"
-        )
 
 
 if __name__ == "__main__":
