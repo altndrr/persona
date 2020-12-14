@@ -34,8 +34,10 @@ class Triplets(Base):
             total_paths.extend(paths)
         total_classes = list(set(total_classes))
         total_paths = list(set(total_paths))
-        print(f"Test dataset composed of {len(total_classes)} unique classes "
-              f"and {len(total_paths)} unique images.")
+        print(
+            f"Test dataset composed of {len(total_classes)} unique classes "
+            f"and {len(total_paths)} unique images."
+        )
 
         dataset_classes = None
         if triplet_dataset.get_name() == "agedb":
@@ -51,8 +53,10 @@ class Triplets(Base):
             original_dataset = raw.VGGFace2("train")
             dataset_classes = 8631
         dataset_images = len(original_dataset)
-        print(f"Raw dataset composed of {dataset_classes} unique classes "
-              f"and {dataset_images} unique images.")
+        print(
+            f"Raw dataset composed of {dataset_classes} unique classes "
+            f"and {dataset_images} unique images."
+        )
 
         class_coverage = len(total_classes) / dataset_classes
         image_coverage = len(total_paths) / dataset_images
