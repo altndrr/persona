@@ -10,7 +10,8 @@ import torchvision
 
 from src.data import processed
 from src.models import nn
-from src.utils import data, lfw, models, path
+from src.utils import datasets as datas
+from src.utils import lfw, models, path
 
 
 def distill(
@@ -46,15 +47,13 @@ def distill(
         )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    classes = data.get_vggface2_classes("train")
+    classes = datas.get_vggface2_classes("train")
 
     student = student.to(device)
     teacher = nn.teacher(classify=True).eval().to(device)
 
-    train_loader = data.get_triplet_dataloader(
-        datasets["train"], batch_size, num_workers
-    )
-    test_loader = data.get_triplet_dataloader(datasets["test"], batch_size, num_workers)
+    train_loader = datas.get_dataloader(datasets["train"], batch_size, num_workers)
+    test_loader = datas.get_dataloader(datasets["test"], batch_size, num_workers)
 
     optimizer = torch.optim.Adam(student.parameters(), lr=lr)
     scheduler = (
@@ -113,7 +112,7 @@ def test(
     network = network.to(device)
 
     if isinstance(dataset, processed.TripletDataset):
-        loader = data.get_triplet_dataloader(dataset, batch_size, num_workers)
+        loader = datas.get_triplet_dataloader(dataset, batch_size, num_workers)
 
         if measure == "class" and loader.dataset.get_name() != "vggface2_train":
             raise ValueError(
@@ -130,7 +129,7 @@ def test(
     elif isinstance(dataset, processed.FolderDataset):
         if measure == "class":
             raise ValueError(f"class accuracy cannot be measured on lfw dataset")
-        loader = data.get_image_dataloader(dataset, batch_size, num_workers)
+        loader = datas.get_folder_dataloader(dataset, batch_size, num_workers)
         accuracy = test_lfw(network, loader, device)
         print("LFW mean accuracy: %.3f" % accuracy)
 
@@ -150,7 +149,7 @@ def test_class_accuracy(
     network.classify = True
 
     accuracy = 0
-    classes = data.get_vggface2_classes("train")
+    classes = datas.get_vggface2_classes("train")
 
     for _, sample in enumerate(loader):
         inputs, labels = sample
