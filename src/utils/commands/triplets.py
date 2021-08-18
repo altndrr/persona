@@ -43,6 +43,9 @@ class Triplets(Base):
         if triplet_dataset.get_name() == "agedb":
             original_dataset = raw.AgeDB()
             dataset_classes = 567
+        elif triplet_dataset.get_name() == "casia":
+            original_dataset = raw.CASIAWebFaces()
+            dataset_classes = 10575
         elif triplet_dataset.get_name() == "lfw":
             original_dataset = raw.LFW()
             dataset_classes = 5479
@@ -61,7 +64,7 @@ class Triplets(Base):
         class_coverage = len(total_classes) / dataset_classes
         image_coverage = len(total_paths) / dataset_images
         print("Class coverage: %.3f." % class_coverage)
-        print("Class coverage: %.3f." % image_coverage)
+        print("Image coverage: %.3f." % image_coverage)
 
     def triplets_list(self):
         """List the generated triplets"""
@@ -78,6 +81,8 @@ class Triplets(Base):
         dataset = None
         if self.options["<dataset>"] == "agedb":
             dataset = raw.AgeDB()
+        elif self.options["<dataset>"] == "casia":
+            dataset = raw.CASIAWebFaces()
         elif self.options["<dataset>"] == "lfw":
             dataset = raw.LFW()
         elif self.options["<dataset>"] == "vggface2" and self.options["--split"]:

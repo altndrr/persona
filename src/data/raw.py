@@ -205,6 +205,58 @@ class AgeDB(Raw):
         return images
 
 
+class CASIAWebFaces(Raw):
+    """CASIA-WebFaces main class"""
+
+    @classmethod
+    def get_root_path(cls) -> str:
+        return os.path.join("data", "raw", "casia")
+
+    @classmethod
+    def get_annotations_keys(cls) -> List[str]:
+        return ["class_id", "image_id"]
+
+    @classmethod
+    def is_available(cls) -> bool:
+        return os.path.exists(cls.get_root_path())
+
+    def get_name(self):
+        return "casia"
+
+    def get_path(self) -> str:
+        return self.get_root_path()
+
+    def _load_annotations(self) -> List[dict]:
+        """
+        Load the list of annotations
+
+        :return: image annotations
+        """
+
+        annotations = []
+
+        for image in self._images:
+            image_id = os.path.basename(image).split(".")[0]
+            class_id = os.path.basename(os.path.dirname(image))
+
+            annotations.append(
+                dict(zip(self.get_annotations_keys(), [class_id, image_id]))
+            )
+
+        return annotations
+
+    def _load_images(self) -> list:
+        """
+        Load the list of images
+
+        :return: image paths
+        """
+        target = os.path.join(self.get_root_path(), "*", "*.jpg")
+        images = glob(target)
+
+        return images
+
+
 class LFW(Raw):
     """LFW main class"""
 
