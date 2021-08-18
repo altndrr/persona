@@ -4,7 +4,7 @@ import os
 from abc import ABC, abstractmethod
 from glob import glob
 from random import randint
-from typing import List, Union
+from typing import List, Tuple, Union
 
 
 class Raw(ABC):
@@ -22,7 +22,7 @@ class Raw(ABC):
     def __len__(self):
         return len(self._images)
 
-    def __getitem__(self, index: int) -> (str, dict):
+    def __getitem__(self, index: int) -> Tuple[str, dict]:
         return self._images[index], self._annotations[index]
 
     @classmethod

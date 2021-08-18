@@ -64,7 +64,9 @@ def get_vggface2_classes(split) -> List[str]:
     classes = [
         os.path.basename(folder)
         for folder in glob(
-            os.path.join(path.get_project_root(), "data", "raw", "vggface2", split, "*")
+            os.path.join(
+                path.get_project_root(), "data", "processed", "vggface2", split, "*"
+            )
         )
     ]
 

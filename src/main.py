@@ -21,8 +21,8 @@ Options:
     --lr=<VAL>                      Learning rate for training [default: 0.001].
     --measure=<VAL>                 Test measure to use, either class or match [default: match].
     --no-lr-scheduler               Don't use a learning rate scheduler.
-    --set=[<ID> | lfw | vggface2]   ID of a triplet (either for training or for testing) \
-or dataset name.
+    --set=[<ID> | lfw]              ID of a triplet (either for training or for testing) or \
+dataset name.
     --split=<VAL>                   Split of the dataset, either train or test.
     --student=<ID>                  ID of the student network.
     --train-set=[<ID> | vggface2]   ID of the training set or dataset name.
