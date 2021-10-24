@@ -6,7 +6,7 @@ This repository contains the code and the results of my research project in deep
 
 The purpose of the research is to develop a deep learning model able to recognize faces. The primary constraints of the
 development are to build an architecture as small as possible that supports learning in production. Due to these
-limits, in the repository are presented techniques for knowledge distillation and continual learning.
+limits, in the repository are presented techniques for knowledge distillation.
 
 ## Setup
 
