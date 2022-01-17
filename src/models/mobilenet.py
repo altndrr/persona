@@ -235,7 +235,7 @@ class MobileNetV3(nn.Module):
             torch.nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True),
         )
 
-        if classify and self.n_class is not None:
+        if self.n_class is not None:
             self.logits = torch.nn.Linear(512, self.n_class)
 
         self._initialize_weights()

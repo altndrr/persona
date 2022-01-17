@@ -1,5 +1,6 @@
 """Collection of functions to apply on neural networks"""
 import os
+from copy import deepcopy
 from glob import glob
 from typing import Dict, Union
 
@@ -65,6 +66,9 @@ def distill(
         else utils.models.get_distillation_lr_scheduler(epochs, optimizer)
     )
 
+    best_model = None
+    best_accuracy = -1
+
     for epoch in range(epochs):
         print(f"\nEpoch {epoch + 1}")
 
@@ -84,10 +88,15 @@ def distill(
         accuracy = evaluation_step(student, test_loader, device)
         print("Match accuracy: %.3f" % accuracy)
 
+        if accuracy > best_accuracy:
+            print("New best model found.")
+            best_accuracy = accuracy
+            best_model = deepcopy(student)
+
         if scheduler:
             scheduler.step()
 
-    return student
+    return best_model
 
 
 def distill_step(
@@ -167,10 +176,10 @@ def distill_step(
         running_hard_loss += hard_loss.item() * hard_weight
         if count % print_every == print_every - 1:
             print(
-                "[%d, %5d] loss: %.3f (soft: %.3f, hard: %.3f)"
+                "[%d, %.3f] loss: %.3f (soft: %.3f, hard: %.3f)"
                 % (
                     epoch + 1,
-                    count + 1,
+                    (count + 1) / len(loader),
                     running_loss / print_every,
                     running_soft_loss / print_every,
                     running_hard_loss / print_every,

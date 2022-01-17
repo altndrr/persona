@@ -61,14 +61,7 @@ class Models(Base):
         epochs_to_string = str(self.options["--epochs"]).zfill(3)
         basename = f"{n_files}_{self.options['<model_name>']}_{epochs_to_string}.pth"
         filename = os.path.join(save_path, basename)
-        print(f"Saved model to {filename}")
-        student.eval().cpu()
-        torch.save(student, filename)
-
-        state_path = os.path.join(save_path, "dicts")
-        os.makedirs(state_path, exist_ok=True)
-        state_filename = os.path.join(state_path, basename)
-        torch.save(student.state_dict(), state_filename)
+        torch.save(student.state_dict(), filename)
 
     def models_list(self):
         """List the generated models"""
@@ -92,8 +85,14 @@ class Models(Base):
 
             for file in model_files:
                 if os.path.basename(file).startswith(model_file_id):
-                    model = torch.load(file)
+                    weights_path = file
+                    model_name = os.path.splitext(os.path.basename(file))[0][3:-4]
                     break
+
+            if model_name == "mobilenet_v3_small":
+                model = nn.mobilenet_v3(weights=weights_path, mode="small")
+            elif model_name == "mobilenet_v3_large":
+                model = nn.mobilenet_v3(weights=weights_path, mode="large")
 
         if model is None:
             raise ValueError(f"{self.options['--student']} is an invalid file id")
